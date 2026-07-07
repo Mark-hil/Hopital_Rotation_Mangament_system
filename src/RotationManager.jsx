@@ -367,9 +367,7 @@ function RegisterTab({ onRegister }) {
     if (!form.school.trim()) e.school = "Required";
     setErrors(e);
     if (Object.keys(e).length) return;
-    onRegister({ ...form, id: Date.now() });
-    setForm({ name: "", email: "", password: "", phone: "", school: "", group: "nursing" });
-    setErrors({});
+    onRegister(form);
   }
 
   return (
@@ -884,41 +882,22 @@ const NAV_ICONS = {
 // ─── Login screen ─────────────────────────────────────────────────────────────
 // Demo auth only — swap handleLogin for a real API call when wiring up a backend.
 
-function LoginScreen({ onLogin, onGoRegister }) {
+function LoginScreen({ onGoRegister }) {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
   const [showPw, setShowPw] = useState(false);
 
-  // onClick handler (not form submit) so it works in all environments
-  function handleLogin() {
+  async function handleLogin() {
     setError("");
     if (!email.trim() || !password.trim()) { setError("Enter both email and password."); return; }
     setLoading(true);
-    supabase.from('users').select('*').eq('email', email.trim()).eq('password', password).maybeSingle()
-      .then(({ data, error }) => {
-        if (data) {
-          setLoading(false);
-          onLogin({ name: data.name, email: data.email, role: data.role });
-        } else {
-          supabase.from('members').select('*').eq('email', email.trim()).eq('password', password).maybeSingle()
-            .then(({ data, error }) => {
-              setLoading(false);
-              if (error || !data) { setError("Invalid email or password."); return; }
-              onLogin({ id: data.id, name: data.name, email: data.email, role: "Member" });
-            })
-            .catch(err => {
-              setLoading(false);
-              setError("Network error connecting to Supabase.");
-            });
-        }
-      })
-      .catch(err => {
-        setLoading(false);
-        setError("Network error connecting to Supabase.");
-      });
+    const { error: err } = await supabase.auth.signInWithPassword({ email: email.trim(), password });
+    setLoading(false);
+    if (err) setError("Invalid email or password.");
   }
+
   return (
     <div style={{ minHeight: "100vh", background: "#0F172A", display: "flex", alignItems: "center", justifyContent: "center", fontFamily: "'Inter', system-ui, sans-serif", padding: 20 }}>
       <div style={{ width: "100%", maxWidth: 380 }}>
@@ -993,8 +972,9 @@ function LoginScreen({ onLogin, onGoRegister }) {
 // ─── Member Dashboard ─────────────────────────────────────────────────────────
 
 function MemberDashboardTab({ user, members, assignments }) {
-  const member = members.find(m => m.id === user.id);
-  const myAssignments = assignments.filter(a => a.memberId === user.id).sort((a,b) => new Date(b.startDate) - new Date(a.startDate));
+  const member = members.find(m => m.auth_id === user.id);
+  const internalMemberId = member?.id;
+  const myAssignments = assignments.filter(a => a.memberId === internalMemberId).sort((a,b) => new Date(b.startDate) - new Date(a.startDate));
 
   if (!member) return <div style={{ padding: 40, textAlign: "center", color: "#94A3B8" }}>Loading your profile...</div>;
 
@@ -1277,34 +1257,77 @@ function MainApp({ user, onLogout }) {
 export default function App() {
   const [user, setUser] = useState(null);
   const [view, setView] = useState("login");
+  const [loading, setLoading] = useState(true);
+  const [toast, setToast] = useState("");
+
+  function showToast(msg) { setToast(msg); setTimeout(() => setToast(""), 3000); }
+
+  useEffect(() => {
+    supabase.auth.getSession().then(({ data: { session } }) => {
+      if (session?.user) {
+        setUser({ id: session.user.id, name: session.user.user_metadata.name, email: session.user.email, role: session.user.user_metadata.role });
+      }
+      setLoading(false);
+    });
+
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
+      if (session?.user) {
+        setUser({ id: session.user.id, name: session.user.user_metadata.name, email: session.user.email, role: session.user.user_metadata.role });
+      } else {
+        setUser(null);
+      }
+    });
+
+    return () => subscription.unsubscribe();
+  }, []);
+
+  if (loading) return <div style={{ minHeight: "100vh", background: "#0F172A", display: "flex", alignItems: "center", justifyContent: "center", color: "#fff", fontFamily: "'Inter', sans-serif" }}>Loading session...</div>;
 
   if (user) {
-    return <MainApp user={user} onLogout={() => setUser(null)} />;
+    return <MainApp user={user} onLogout={() => supabase.auth.signOut()} />;
   }
 
   if (view === "register") {
     return (
-      <div style={{ minHeight: "100vh", background: "#0F172A", display: "flex", alignItems: "center", justifyContent: "center", padding: 20 }}>
-        <div style={{ background: "#fff", padding: "32px 40px", borderRadius: 20, width: "100%", maxWidth: 500, boxShadow: "0 24px 60px rgba(0,0,0,0.35)" }}>
-          <RegisterTab onRegister={(m) => {
-            const { id, ...memberData } = m;
-            supabase.from('members').insert([memberData])
-              .then(({ error }) => {
-                if (error) alert("Error registering. Please try again.");
-                else {
-                  alert("Successfully registered! Please log in.");
-                  setView("login");
-                }
-              })
-          }} />
-          <button onClick={() => setView("login")} style={{ background: "none", border: "none", color: "#64748B", fontSize: 13, fontWeight: 600, cursor: "pointer", marginTop: 24, padding: 0, display: "flex", alignItems: "center", gap: 6 }}>
-            <svg width="14" height="14" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path d="M19 12H5M12 19l-7-7 7-7" /></svg>
-            Back to sign in
-          </button>
+      <>
+        <div style={{ minHeight: "100vh", background: "#0F172A", display: "flex", alignItems: "center", justifyContent: "center", padding: 20 }}>
+          <div style={{ background: "#fff", padding: "32px 40px", borderRadius: 20, width: "100%", maxWidth: 500, boxShadow: "0 24px 60px rgba(0,0,0,0.35)" }}>
+            <RegisterTab onRegister={async (form) => {
+              const { data, error } = await supabase.auth.signUp({
+                email: form.email,
+                password: form.password,
+                options: { data: { role: 'Member', name: form.name } }
+              });
+              if (error) {
+                showToast("Error registering: " + error.message);
+              } else if (data.user) {
+                await supabase.from('members').insert([{
+                  auth_id: data.user.id,
+                  name: form.name,
+                  email: form.email,
+                  phone: form.phone,
+                  school: form.school,
+                  group: form.group
+                }]);
+                showToast("Successfully registered! Please log in.");
+                setView("login");
+              }
+            }} />
+            <button onClick={() => setView("login")} style={{ background: "none", border: "none", color: "#64748B", fontSize: 13, fontWeight: 600, cursor: "pointer", marginTop: 24, padding: 0, display: "flex", alignItems: "center", gap: 6 }}>
+              <svg width="14" height="14" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path d="M19 12H5M12 19l-7-7 7-7" /></svg>
+              Back to sign in
+            </button>
+          </div>
         </div>
-      </div>
+        <Toast msg={toast} />
+      </>
     );
   }
 
-  return <LoginScreen onLogin={setUser} onGoRegister={() => setView("register")} />;
+  return (
+    <>
+      <LoginScreen onGoRegister={() => setView("register")} />
+      <Toast msg={toast} />
+    </>
+  );
 }
