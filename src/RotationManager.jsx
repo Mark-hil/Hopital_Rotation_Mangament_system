@@ -216,14 +216,14 @@ function DashboardTab({ members, assignments, onGoAssign }) {
       </div>
 
       {/* Metric cards */}
-      <div style={{ display: "grid", gridTemplateColumns: "repeat(4,1fr)", gap: 16, marginBottom: 32 }}>
+      <div className="dashboard-grid">
         {[
           { label: "Unassigned", val: counts.unassigned, accent: "#94A3B8", bg: "#F8FAFC", tc: "#475569", icon: "👥" },
           { label: "Active now", val: counts.active, accent: "#10B981", bg: "#ECFDF5", tc: "#065F46", icon: "🏥" },
           { label: "Ending soon", val: counts.ending_soon, accent: "#F59E0B", bg: "#FFFBEB", tc: "#92400E", icon: "⏳" },
           { label: "Completed — Ready", val: counts.completed, accent: "#F43F5E", bg: "#FFF1F2", tc: "#BE123C", icon: "✅" },
         ].map((m) => (
-          <div key={m.label} style={{ background: "#fff", borderRadius: 16, border: "1px solid #E2E8F0", padding: "20px", boxShadow: "0 4px 12px rgba(0,0,0,0.02)", position: "relative", overflow: "hidden" }}>
+          <div key={m.label} className="premium-card" style={{ padding: "20px", position: "relative", overflow: "hidden", borderRadius: 16 }}>
             <div style={{ position: "absolute", top: 0, left: 0, bottom: 0, width: 4, background: m.accent }} />
             <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: 12 }}>
               <div style={{ fontSize: 13, fontWeight: 700, color: "#64748B", textTransform: "uppercase", letterSpacing: "0.05em" }}>{m.label}</div>
@@ -261,7 +261,7 @@ function DashboardTab({ members, assignments, onGoAssign }) {
       </div>
 
       {/* Table */}
-      <div style={{ background: "#fff", borderRadius: 16, border: "1px solid #E2E8F0", overflow: "hidden", boxShadow: "0 4px 20px rgba(0,0,0,0.03)" }}>
+      <div className="table-wrapper">
         {filtered.length === 0 ? (
           <div style={{ textAlign: "center", padding: 60, color: "#94A3B8" }}>
             <div style={{ fontSize: 40, marginBottom: 16 }}>🔍</div>
@@ -269,7 +269,7 @@ function DashboardTab({ members, assignments, onGoAssign }) {
             <div style={{ fontSize: 14, marginTop: 4 }}>{members.length === 0 ? "You haven't registered any members yet." : "No members match your current filter and search."}</div>
           </div>
         ) : (
-          <table style={{ width: "100%", borderCollapse: "collapse", fontSize: 13 }}>
+          <table className="responsive-table">
             <thead>
               <tr style={{ background: "#F8FAFC", borderBottom: "1px solid #E2E8F0" }}>
                 {["Member", "Group", "Current ward", "Started", "Ends", "Days left", "Status", ""].map((h) => (
@@ -376,7 +376,7 @@ function RegisterTab({ onRegister }) {
         <h2 style={{ fontSize: 26, fontWeight: 700, letterSpacing: "-0.02em", color: "#0F172A" }}>Register member</h2>
         <p style={{ fontSize: 15, color: "#64748B", marginTop: 4 }}>Add a new nurse or midwife to the 2023/2024 rotation.</p>
       </div>
-      <div style={{ background: "#fff", borderRadius: 16, border: "1px solid #E2E8F0", padding: "32px", boxShadow: "0 4px 20px rgba(0,0,0,0.03)" }}>
+      <div className="premium-card" style={{ padding: "32px", borderRadius: 16 }}>
         {[
           ["name", "Full name", "text", "e.g. Abena Mensah"],
           ["email", "Email address", "email", "e.g. abena@rota.com"],
@@ -400,7 +400,7 @@ function RegisterTab({ onRegister }) {
         ))}
         <div style={{ marginBottom: 32 }}>
           <label style={{ display: "block", fontSize: 11, fontWeight: 700, color: "#64748B", marginBottom: 10, letterSpacing: "0.05em", textTransform: "uppercase" }}>GROUP</label>
-          <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12 }}>
+          <div className="register-grid">
             {[{ val: "nursing", icon: "🏥", title: "General Nursing", desc: "52-week programme" }, { val: "midwifery", icon: "👶", title: "Midwifery", desc: "52-week programme" }].map((g) => (
               <div 
                 key={g.val} 
@@ -500,7 +500,7 @@ function AssignTab({ members, assignments, onBulkAssign, initialTargetIds }) {
         <h2 style={{ fontSize: 26, fontWeight: 700, letterSpacing: "-0.02em", color: "#0F172A" }}>Assign ward placement</h2>
         <p style={{ fontSize: 15, color: "#64748B", marginTop: 4 }}>Select any mix of members — weeks auto-adjust per each member's programme.</p>
       </div>
-      <div style={{ display: "grid", gridTemplateColumns: "1fr 380px", gap: 24, alignItems: "start" }}>
+      <div className="assign-layout">
         <div>
           <div style={{ display: "flex", gap: 8, marginBottom: 16, flexWrap: "wrap", alignItems: "center" }}>
             <input style={{ ...INP, maxWidth: 220, flex: 1, padding: "10px 14px", background: "#fff" }} placeholder="Search members…" value={search} onChange={(e) => setSearch(e.target.value)} />
@@ -512,13 +512,13 @@ function AssignTab({ members, assignments, onBulkAssign, initialTargetIds }) {
             )}
           </div>
           {members.length === 0
-            ? <div style={{ background: "#fff", borderRadius: 16, border: "1px solid #E2E8F0", padding: "60px 40px", textAlign: "center", color: "#94A3B8", boxShadow: "0 4px 20px rgba(0,0,0,0.03)" }}>
+            ? <div className="premium-card" style={{ padding: "60px 40px", textAlign: "center", color: "#94A3B8", borderRadius: 16 }}>
                 <div style={{ fontSize: 40, marginBottom: 16 }}>👥</div>
                 <div style={{ fontSize: 16, fontWeight: 600, color: "#475569" }}>No members registered</div>
                 <div style={{ fontSize: 14, marginTop: 4 }}>Go to the Register tab to add your first member.</div>
               </div>
-            : <div style={{ background: "#fff", borderRadius: 16, border: "1px solid #E2E8F0", overflow: "hidden", boxShadow: "0 4px 20px rgba(0,0,0,0.03)" }}>
-              <div style={{ padding: "14px 20px", borderBottom: "1px solid #E2E8F0", display: "flex", alignItems: "center", gap: 14, background: "#F8FAFC" }}>
+            : <div className="table-wrapper">
+              <div style={{ padding: "14px 20px", borderBottom: "1px solid #E2E8F0", display: "flex", alignItems: "center", gap: 14, background: "rgba(248, 250, 252, 0.5)" }}>
                 <Checkbox checked={visibleMembers.length > 0 && visibleMembers.every((m) => selectedIds.has(m.id))} indeterminate={visibleMembers.some((m) => selectedIds.has(m.id)) && !visibleMembers.every((m) => selectedIds.has(m.id))} onChange={toggleAll} />
                 <span style={{ fontSize: 12, fontWeight: 700, color: "#64748B", textTransform: "uppercase", letterSpacing: "0.05em" }}>{selectedIds.size > 0 ? `${selectedIds.size} selected` : "Select all"}</span>
                 {isMixed && <span style={{ fontSize: 11, background: "#EEF2FF", color: "#4338CA", padding: "4px 10px", borderRadius: 99, fontWeight: 700, marginLeft: "auto" }}>Mixed — weeks auto-adjust ✓</span>}
@@ -558,7 +558,7 @@ function AssignTab({ members, assignments, onBulkAssign, initialTargetIds }) {
 
         <div style={{ position: "sticky", top: 24, display: "flex", flexDirection: "column", gap: 16 }}>
           {selectedIds.size > 0 && (
-            <div style={{ background: "#fff", borderRadius: 16, border: "1px solid #E2E8F0", padding: "24px", boxShadow: "0 4px 20px rgba(0,0,0,0.03)" }}>
+            <div className="premium-card" style={{ padding: "24px", borderRadius: 16 }}>
               <div style={{ fontSize: 11, fontWeight: 700, color: "#64748B", marginBottom: 12, letterSpacing: "0.05em", textTransform: "uppercase" }}>SELECTED ({selectedIds.size})</div>
               <div style={{ display: "flex", flexWrap: "wrap", gap: 8 }}>
                 {selectedMembers.map((m) => (
@@ -579,14 +579,14 @@ function AssignTab({ members, assignments, onBulkAssign, initialTargetIds }) {
           )}
 
           {selectedIds.size > 0 && (
-            <div style={{ background: "#fff", borderRadius: 16, border: "1px solid #E2E8F0", padding: "24px", boxShadow: "0 4px 20px rgba(0,0,0,0.03)", maxHeight: 400, overflowY: "auto" }}>
+            <div className="premium-card" style={{ padding: "24px", maxHeight: 400, overflowY: "auto", borderRadius: 16 }}>
               <div style={{ fontSize: 11, fontWeight: 700, color: "#64748B", marginBottom: 16, letterSpacing: "0.05em", textTransform: "uppercase" }}>CHOOSE WARD</div>
               {visibleWardGroups.map((grp) => (
                 <div key={grp.group} style={{ marginBottom: 20 }}>
                   <div style={{ fontSize: 12, fontWeight: 700, color: "#475569", marginBottom: 10, display: "flex", alignItems: "center", gap: 8 }}>
                     <span>{grp.group}</span><div style={{ flex: 1, height: 1, background: "#E2E8F0" }} />
                   </div>
-                  <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 8 }}>
+                  <div className="wards-grid">
                     {grp.wards.map((w) => {
                       const st = wardStatus(w.name); const sel = selectedWardName === w.name;
                       return (
@@ -612,7 +612,7 @@ function AssignTab({ members, assignments, onBulkAssign, initialTargetIds }) {
           )}
 
           {selectedWardName && assignable.length > 0 && (
-            <div style={{ background: "#fff", borderRadius: 16, border: "1px solid #E2E8F0", padding: "24px", boxShadow: "0 4px 20px rgba(0,0,0,0.03)" }}>
+            <div className="premium-card" style={{ padding: "24px", borderRadius: 16 }}>
               <div style={{ fontSize: 11, fontWeight: 700, color: "#64748B", marginBottom: 12, letterSpacing: "0.05em", textTransform: "uppercase" }}>CONFIRM</div>
               <div style={{ background: swd?.color || "#F8FAFC", borderRadius: 12, padding: "14px 16px", marginBottom: 16, border: `1px solid ${swd?.accent}30` }}>
                 <div style={{ fontSize: 14, fontWeight: 700, color: swd?.textColor || "#0F172A" }}>{selectedWardName}</div>
@@ -670,13 +670,13 @@ function MembersTab({ members, assignments }) {
         <h2 style={{ fontSize: 26, fontWeight: 700, letterSpacing: "-0.02em", color: "#0F172A" }}>Members</h2>
         <p style={{ fontSize: 15, color: "#64748B", marginTop: 4 }}>All registered nurses and midwives.</p>
       </div>
-      <div style={{ display: "grid", gridTemplateColumns: "repeat(3,1fr)", gap: 16, marginBottom: 32 }}>
+      <div className="members-grid">
         {[
           { l: "Total Members", v: members.length, a: "#6366F1", icon: "👥" }, 
           { l: "General Nursing", v: members.filter((m) => m.group === "nursing").length, a: "#3B82F6", icon: "🏥" }, 
           { l: "Midwifery", v: members.filter((m) => m.group === "midwifery").length, a: "#10B981", icon: "👶" }
         ].map((m) => (
-          <div key={m.l} style={{ background: "#fff", borderRadius: 16, border: "1px solid #E2E8F0", padding: "20px", boxShadow: "0 4px 12px rgba(0,0,0,0.02)", position: "relative", overflow: "hidden" }}>
+          <div key={m.l} className="premium-card" style={{ padding: "20px", position: "relative", overflow: "hidden", borderRadius: 16 }}>
             <div style={{ position: "absolute", top: 0, left: 0, bottom: 0, width: 4, background: m.a }} />
             <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: 12 }}>
               <div style={{ fontSize: 13, fontWeight: 700, color: "#64748B", textTransform: "uppercase", letterSpacing: "0.05em" }}>{m.l}</div>
@@ -690,14 +690,14 @@ function MembersTab({ members, assignments }) {
         <input style={{ ...INP, maxWidth: 280, width: "auto", padding: "10px 14px", background: "#fff" }} placeholder="Search name or school…" value={q} onChange={(e) => setQ(e.target.value)} />
         <FilterPills value={filter} onChange={setFilter} options={[{ val: "all", label: "All" }, { val: "nursing", label: "Nursing" }, { val: "midwifery", label: "Midwifery" }]} />
       </div>
-      <div style={{ background: "#fff", borderRadius: 16, border: "1px solid #E2E8F0", overflow: "hidden", boxShadow: "0 4px 20px rgba(0,0,0,0.03)" }}>
+      <div className="table-wrapper">
         {filtered.length === 0
           ? <div style={{ textAlign: "center", padding: 60, color: "#94A3B8" }}>
               <div style={{ fontSize: 40, marginBottom: 16 }}>🔍</div>
               <div style={{ fontSize: 16, fontWeight: 600, color: "#475569" }}>No members found</div>
               <div style={{ fontSize: 14, marginTop: 4 }}>{members.length === 0 ? "You haven't registered any members yet." : "No members match your current filter and search."}</div>
             </div>
-          : <table style={{ width: "100%", borderCollapse: "collapse", fontSize: 14 }}>
+          : <table className="responsive-table members-table">
             <thead><tr style={{ background: "#F8FAFC", borderBottom: "1px solid #E2E8F0" }}>{["Member", "Institution", "Phone", "Group", "Assignments"].map((h) => <th key={h} style={{ textAlign: "left", padding: "14px 18px", fontSize: 11, fontWeight: 700, color: "#64748B", textTransform: "uppercase", letterSpacing: "0.05em" }}>{h}</th>)}</tr></thead>
             <tbody>{filtered.map((m, i) => {
               const count = assignments.filter((a) => a.memberId === m.id).length;
@@ -724,8 +724,8 @@ function EditAssignmentModal({ assignment, onSave, onCancel }) {
   const [weeks, setWeeks] = useState(assignment.weeks);
 
   return (
-    <div style={{ position: "fixed", inset: 0, background: "rgba(0,0,0,0.5)", display: "flex", alignItems: "center", justifyContent: "center", zIndex: 100 }}>
-      <div style={{ background: "#fff", padding: 24, borderRadius: 16, width: "90%", maxWidth: 400, boxShadow: "0 24px 60px rgba(0,0,0,0.3)" }}>
+    <div style={{ position: "fixed", inset: 0, background: "rgba(15,23,42,0.6)", backdropFilter: "blur(4px)", display: "flex", alignItems: "center", justifyContent: "center", zIndex: 100 }}>
+      <div className="premium-card" style={{ padding: 24, borderRadius: 16, width: "90%", maxWidth: 400, boxShadow: "0 24px 60px rgba(0,0,0,0.3) !important" }}>
         <h3 style={{ fontSize: 18, fontWeight: 700, marginBottom: 8 }}>Edit Assignment</h3>
         <p style={{ fontSize: 13, color: "#64748B", marginBottom: 20 }}>Change the ward, start date, or weeks.</p>
         
@@ -759,7 +759,7 @@ function EditAssignmentModal({ assignment, onSave, onCancel }) {
           </select>
         </div>
 
-        <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12, marginBottom: 24 }}>
+        <div className="edit-modal-grid">
           <div>
             <label style={LS}>START DATE</label>
             <input type="date" style={{ ...INP }} value={startDate} onChange={e => setStartDate(e.target.value)} />
@@ -814,7 +814,7 @@ function RotationsTab({ members, assignments, onEditAssignment }) {
             <div style={{ fontSize: 14, marginTop: 4 }}>{members.length === 0 ? "You haven't registered any members yet." : "No members match your current filter and search."}</div>
           </div>
         : grouped.map((m) => (
-          <div key={m.id} style={{ background: "#fff", borderRadius: 16, border: "1px solid #E2E8F0", padding: "24px", marginBottom: 16, boxShadow: "0 4px 20px rgba(0,0,0,0.03)" }}>
+          <div key={m.id} className="premium-card" style={{ padding: "24px", marginBottom: 16, borderRadius: 16 }}>
             <div style={{ display: "flex", alignItems: "center", gap: 16, marginBottom: 20 }}>
               <Avatar name={m.name} group={m.group} size={44} />
               <div style={{ flex: 1 }}>
@@ -909,7 +909,7 @@ function LoginScreen({ onGoRegister }) {
           <div style={{ fontSize: 12, color: "rgba(255,255,255,0.4)", marginTop: 3 }}>2023 / 2024 rotation system</div>
         </div>
 
-        <div style={{ background: "#fff", borderRadius: 20, padding: "32px 28px", boxShadow: "0 24px 60px rgba(0,0,0,0.35)" }}>
+        <div className="premium-card" style={{ borderRadius: 20, padding: "32px 28px", boxShadow: "0 24px 60px rgba(0,0,0,0.35) !important" }}>
           <div style={{ fontSize: 18, fontWeight: 700, color: "#0F172A", marginBottom: 4 }}>Welcome back</div>
           <p style={{ fontSize: 13, color: "#64748B", marginBottom: 24 }}>Sign in to manage rotations.</p>
 
@@ -1024,7 +1024,7 @@ function MemberDashboardTab({ user, members, assignments }) {
         <p style={{ fontSize: 15, color: "#64748B", marginTop: 4 }}>Track your rotation schedule and ward placements.</p>
       </div>
 
-      <div style={{ background: "#fff", borderRadius: 16, border: "1px solid #E2E8F0", padding: "28px 32px", marginBottom: 24, boxShadow: "0 4px 20px rgba(0,0,0,0.03)" }}>
+      <div className="premium-card" style={{ padding: "28px 32px", marginBottom: 24, borderRadius: 16 }}>
         <div style={{ display: "flex", gap: 18, alignItems: "center", marginBottom: 32, paddingBottom: 24, borderBottom: "1px solid #F1F5F9" }}>
           <Avatar name={member.name} group={member.group} size={56} />
           <div>
@@ -1177,8 +1177,8 @@ function MainApp({ user, onLogout }) {
   ];
 
   return (
-    <div style={{ display: "flex", minHeight: "100vh", background: "#F8FAFC", fontFamily: "'Inter', system-ui, sans-serif", color: "#0F172A" }}>
-      <aside style={{ width: 220, background: "#0F172A", display: "flex", flexDirection: "column", position: "sticky", top: 0, height: "100vh", flexShrink: 0 }}>
+    <div className="app-layout">
+      <aside className="app-sidebar">
         <div style={{ padding: "22px 18px 18px", borderBottom: "1px solid rgba(255,255,255,0.07)" }}>
           <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
             <div style={{ width: 30, height: 30, background: "#6366F1", borderRadius: 8, display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
@@ -1190,10 +1190,10 @@ function MainApp({ user, onLogout }) {
             </div>
           </div>
         </div>
-        <nav style={{ flex: 1, padding: "10px 8px", display: "flex", flexDirection: "column", gap: 2 }}>
+        <nav className="sidebar-nav-container" style={{ flex: 1, padding: "10px 8px", display: "flex", flexDirection: "column", gap: 2 }}>
           <div style={{ fontSize: 9, fontWeight: 700, color: "rgba(255,255,255,0.25)", padding: "8px 10px 4px", letterSpacing: "0.1em" }}>MANAGEMENT</div>
           {NAV.map(({ id, label, icon }) => (
-            <button key={id} onClick={() => setTab(id)} style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "9px 10px", borderRadius: 8, cursor: "pointer", fontSize: 13, fontWeight: 500, background: tab === id ? "rgba(99,102,241,0.2)" : "transparent", color: tab === id ? "#818CF8" : "rgba(255,255,255,0.5)", border: "none", width: "100%", textAlign: "left", transition: "all .15s" }}>
+            <button key={id} className="sidebar-nav-btn" onClick={() => setTab(id)} style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "9px 10px", borderRadius: 8, cursor: "pointer", fontSize: 13, fontWeight: 500, background: tab === id ? "rgba(99,102,241,0.2)" : "transparent", color: tab === id ? "#818CF8" : "rgba(255,255,255,0.5)", border: "none", width: "100%", textAlign: "left", transition: "all .15s" }}>
               <div style={{ display: "flex", alignItems: "center", gap: 9 }}>{icon || NAV_ICONS[id]}<span>{label}</span></div>
               {id === "dashboard" && completedCount > 0 && (
                 <span style={{ background: "#F43F5E", color: "#fff", fontSize: 10, fontWeight: 700, padding: "1px 7px", borderRadius: 99, minWidth: 18, textAlign: "center" }}>{completedCount}</span>
@@ -1219,7 +1219,7 @@ function MainApp({ user, onLogout }) {
           </div>
         </div>
       </aside>
-      <main style={{ flex: 1, padding: "28px 32px", overflowY: "auto", maxHeight: "100vh" }}>
+      <main className="app-main">
         {tab === "dashboard" && <DashboardTab members={members} assignments={assignments} onGoAssign={(ids) => { 
           if (!ids) setAssignTargetIds([]);
           else if (Array.isArray(ids)) setAssignTargetIds(ids);
@@ -1234,8 +1234,8 @@ function MainApp({ user, onLogout }) {
       </main>
       {/* Logout confirm modal */}
       {showLogoutConfirm && (
-        <div style={{ position: "fixed", inset: 0, background: "rgba(0,0,0,0.5)", display: "flex", alignItems: "center", justifyContent: "center", zIndex: 200 }}>
-          <div style={{ background: "#fff", borderRadius: 16, padding: "28px 28px", maxWidth: 340, width: "90%", boxShadow: "0 20px 60px rgba(0,0,0,0.25)" }}>
+        <div style={{ position: "fixed", inset: 0, background: "rgba(15,23,42,0.6)", backdropFilter: "blur(4px)", display: "flex", alignItems: "center", justifyContent: "center", zIndex: 200 }}>
+          <div className="premium-card" style={{ padding: "28px 28px", maxWidth: 340, width: "90%", borderRadius: 16, boxShadow: "0 20px 60px rgba(0,0,0,0.25) !important" }}>
             <div style={{ width: 44, height: 44, background: "#FFF1F2", borderRadius: 12, display: "flex", alignItems: "center", justifyContent: "center", marginBottom: 16 }}>
               <svg width="22" height="22" fill="none" stroke="#BE123C" strokeWidth="2" viewBox="0 0 24 24"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4" /><polyline points="16 17 21 12 16 7" /><line x1="21" y1="12" x2="9" y2="12" /></svg>
             </div>
@@ -1291,7 +1291,7 @@ export default function App() {
     return (
       <>
         <div style={{ minHeight: "100vh", background: "#0F172A", display: "flex", alignItems: "center", justifyContent: "center", padding: 20 }}>
-          <div style={{ background: "#fff", padding: "32px 40px", borderRadius: 20, width: "100%", maxWidth: 500, boxShadow: "0 24px 60px rgba(0,0,0,0.35)" }}>
+          <div className="premium-card" style={{ padding: "32px 40px", borderRadius: 20, width: "100%", maxWidth: 500, boxShadow: "0 24px 60px rgba(0,0,0,0.35) !important" }}>
             <RegisterTab onRegister={async (form) => {
               const { data, error } = await supabase.auth.signUp({
                 email: form.email,
