@@ -356,6 +356,7 @@ function DashboardTab({ members, assignments, onGoAssign }) {
 function RegisterTab({ onRegister }) {
   const [form, setForm] = useState({ name: "", email: "", password: "", phone: "", school: "", group: "nursing" });
   const [errors, setErrors] = useState({});
+  const [showPw, setShowPw] = useState(false);
   const set = (k) => (e) => setForm((f) => ({ ...f, [k]: e.target.value }));
 
   function submit() {
@@ -386,15 +387,36 @@ function RegisterTab({ onRegister }) {
         ].map(([id, label, type, ph]) => (
           <div key={id} style={{ marginBottom: 20 }}>
             <label style={{ display: "block", fontSize: 11, fontWeight: 700, color: "#64748B", marginBottom: 6, letterSpacing: "0.05em", textTransform: "uppercase" }}>{label}</label>
-            <input 
-              style={{ ...INP, padding: "12px 14px", borderColor: errors[id] ? "#FCA5A5" : "#E2E8F0", background: "#F8FAFC", boxShadow: "inset 0 1px 2px rgba(0,0,0,0.02)" }} 
-              type={type} 
-              placeholder={ph} 
-              value={form[id]} 
-              onChange={set(id)} 
-              onFocus={e => { e.target.style.background = "#fff"; e.target.style.borderColor = "#6366F1"; e.target.style.boxShadow = "0 0 0 3px rgba(99,102,241,0.1)"; }}
-              onBlur={e => { e.target.style.background = "#F8FAFC"; e.target.style.borderColor = errors[id] ? "#FCA5A5" : "#E2E8F0"; e.target.style.boxShadow = "inset 0 1px 2px rgba(0,0,0,0.02)"; }}
-            />
+            {id === "password" ? (
+              <div style={{ position: "relative" }}>
+                <input 
+                  style={{ ...INP, padding: "12px 14px", borderColor: errors[id] ? "#FCA5A5" : "#E2E8F0", background: "#F8FAFC", boxShadow: "inset 0 1px 2px rgba(0,0,0,0.02)", paddingRight: 44 }} 
+                  type={showPw ? "text" : "password"} 
+                  placeholder={ph} 
+                  value={form[id]} 
+                  onChange={set(id)} 
+                  onFocus={e => { e.target.style.background = "#fff"; e.target.style.borderColor = "#6366F1"; e.target.style.boxShadow = "0 0 0 3px rgba(99,102,241,0.1)"; }}
+                  onBlur={e => { e.target.style.background = "#F8FAFC"; e.target.style.borderColor = errors[id] ? "#FCA5A5" : "#E2E8F0"; e.target.style.boxShadow = "inset 0 1px 2px rgba(0,0,0,0.02)"; }}
+                />
+                <button type="button" onClick={() => setShowPw((s) => !s)} style={{ position: "absolute", right: 10, top: "50%", transform: "translateY(-50%)", background: "none", border: "none", cursor: "pointer", color: "#94A3B8", padding: 4, display: "flex" }}>
+                  {showPw ? (
+                    <svg width="16" height="16" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24" /><line x1="1" y1="1" x2="23" y2="23" /></svg>
+                  ) : (
+                    <svg width="16" height="16" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z" /><circle cx="12" cy="12" r="3" /></svg>
+                  )}
+                </button>
+              </div>
+            ) : (
+              <input 
+                style={{ ...INP, padding: "12px 14px", borderColor: errors[id] ? "#FCA5A5" : "#E2E8F0", background: "#F8FAFC", boxShadow: "inset 0 1px 2px rgba(0,0,0,0.02)" }} 
+                type={type} 
+                placeholder={ph} 
+                value={form[id]} 
+                onChange={set(id)} 
+                onFocus={e => { e.target.style.background = "#fff"; e.target.style.borderColor = "#6366F1"; e.target.style.boxShadow = "0 0 0 3px rgba(99,102,241,0.1)"; }}
+                onBlur={e => { e.target.style.background = "#F8FAFC"; e.target.style.borderColor = errors[id] ? "#FCA5A5" : "#E2E8F0"; e.target.style.boxShadow = "inset 0 1px 2px rgba(0,0,0,0.02)"; }}
+              />
+            )}
             {errors[id] && <p style={{ fontSize: 12, fontWeight: 600, color: "#EF4444", marginTop: 6, display: "flex", alignItems: "center", gap: 4 }}><span style={{fontSize: 14}}>⚠️</span> {errors[id]}</p>}
           </div>
         ))}
