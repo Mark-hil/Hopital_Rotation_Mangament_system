@@ -353,11 +353,35 @@ function DashboardTab({ members, assignments, onGoAssign }) {
 
 // ─── Register ─────────────────────────────────────────────────────────────────
 
-function RegisterTab({ onRegister }) {
-  const [form, setForm] = useState({ name: "", email: "", password: "", phone: "", school: "", group: "nursing" });
+const ALL_WARD_NAMES = WARD_GROUPS.flatMap(g => g.wards.map(w => w.name));
+
+function RegFormField({ id, label, type, placeholder, value, onChange, error }) {
+  return (
+    <div style={{ marginBottom: 18 }}>
+      <label style={{ display: "block", fontSize: 11, fontWeight: 700, color: "#64748B", marginBottom: 6, letterSpacing: "0.05em", textTransform: "uppercase" }}>{label}</label>
+      <input
+        style={{ ...INP, padding: "11px 14px", borderColor: error ? "#FCA5A5" : "#E2E8F0", background: "#F8FAFC" }}
+        type={type || "text"}
+        placeholder={placeholder}
+        value={value}
+        onChange={onChange}
+        onFocus={e => { e.target.style.background = "#fff"; e.target.style.borderColor = "#6366F1"; e.target.style.boxShadow = "0 0 0 3px rgba(99,102,241,0.1)"; }}
+        onBlur={e => { e.target.style.background = "#F8FAFC"; e.target.style.borderColor = error ? "#FCA5A5" : "#E2E8F0"; e.target.style.boxShadow = "none"; }}
+      />
+      {error && <p style={{ fontSize: 12, color: "#EF4444", fontWeight: 600, marginTop: 5, display: "flex", alignItems: "center", gap: 4 }}><span>{"⚠️"}</span>{error}</p>}
+    </div>
+  );
+}
+
+function RegisterTab({ onRegister, adminMode = false }) {
+  const [role, setRole] = useState("Member");
+  const [form, setForm] = useState({ name: "", email: "", password: "", phone: "", school: "", group: "nursing", wards: [] });
   const [errors, setErrors] = useState({});
   const [showPw, setShowPw] = useState(false);
   const set = (k) => (e) => setForm((f) => ({ ...f, [k]: e.target.value }));
+  const isIncharge = adminMode && role === "In-charge";
+  const allWardNames = WARD_GROUPS.flatMap(g => g.wards.map(w => w.name));
+  const allSelected = allWardNames.length > 0 && allWardNames.every(n => form.wards.includes(n));
 
   function submit() {
     const e = {};
@@ -365,88 +389,174 @@ function RegisterTab({ onRegister }) {
     if (!form.email.trim()) e.email = "Required";
     if (!form.password.trim()) e.password = "Required";
     if (!form.phone.trim()) e.phone = "Required";
-    if (!form.school.trim()) e.school = "Required";
+    if (!isIncharge && !form.school.trim()) e.school = "Required";
+    if (isIncharge && form.wards.length === 0) e.wards = "Select at least one ward";
     setErrors(e);
     if (Object.keys(e).length) return;
-    onRegister(form);
+    onRegister({ ...form, role });
   }
 
-  return (
-    <div style={{ maxWidth: 560, margin: "0 auto" }}>
-      <div style={{ marginBottom: 32, textAlign: "center" }}>
-        <h2 style={{ fontSize: 26, fontWeight: 700, letterSpacing: "-0.02em", color: "#0F172A" }}>Register member</h2>
-        <p style={{ fontSize: 15, color: "#64748B", marginTop: 4 }}>Add a new nurse or midwife to the 2023/2024 rotation.</p>
+  function toggleWard(name) {
+    setForm(f => ({ ...f, wards: f.wards.includes(name) ? f.wards.filter(x => x !== name) : [...f.wards, name] }));
+  }
+
+  function toggleAll() {
+    setForm(f => ({ ...f, wards: allSelected ? [] : allWardNames }));
+  }
+
+  const pwInputStyle = { ...INP, padding: "11px 14px", paddingRight: 44, borderColor: errors.password ? "#FCA5A5" : "#E2E8F0", background: "#F8FAFC" };
+  const pwFocus = e => { e.target.style.background = "#fff"; e.target.style.borderColor = "#6366F1"; e.target.style.boxShadow = "0 0 0 3px rgba(99,102,241,0.1)"; };
+  const pwBlur = e => { e.target.style.background = "#F8FAFC"; e.target.style.borderColor = errors.password ? "#FCA5A5" : "#E2E8F0"; e.target.style.boxShadow = "none"; };
+  const EyeIcon = () => showPw
+    ? <svg width="15" height="15" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"/><line x1="1" y1="1" x2="23" y2="23"/></svg>
+    : <svg width="15" height="15" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>;
+
+  const PasswordField = () => (
+    <div style={{ marginBottom: 18 }}>
+      <label style={{ display: "block", fontSize: 11, fontWeight: 700, color: "#64748B", marginBottom: 6, letterSpacing: "0.05em", textTransform: "uppercase" }}>Password</label>
+      <div style={{ position: "relative" }}>
+        <input style={pwInputStyle} type={showPw ? "text" : "password"} placeholder="••••••••" value={form.password} onChange={set("password")} onFocus={pwFocus} onBlur={pwBlur} />
+        <button type="button" onClick={() => setShowPw(s => !s)} style={{ position: "absolute", right: 10, top: "50%", transform: "translateY(-50%)", background: "none", border: "none", cursor: "pointer", color: "#94A3B8", padding: 4, display: "flex" }}><EyeIcon /></button>
       </div>
-      <div className="premium-card" style={{ padding: "32px", borderRadius: 16 }}>
-        {[
-          ["name", "Full name", "text", "e.g. Abena Mensah"],
-          ["email", "Email address", "email", "e.g. abena@rota.com"],
-          ["password", "Password", "password", "••••••••"],
-          ["phone", "Phone number", "tel", "e.g. 0244 000 000"],
-          ["school", "Training institution", "text", "e.g. Korle Bu School of Nursing"]
-        ].map(([id, label, type, ph]) => (
-          <div key={id} style={{ marginBottom: 20 }}>
-            <label style={{ display: "block", fontSize: 11, fontWeight: 700, color: "#64748B", marginBottom: 6, letterSpacing: "0.05em", textTransform: "uppercase" }}>{label}</label>
-            {id === "password" ? (
-              <div style={{ position: "relative" }}>
-                <input 
-                  style={{ ...INP, padding: "12px 14px", borderColor: errors[id] ? "#FCA5A5" : "#E2E8F0", background: "#F8FAFC", boxShadow: "inset 0 1px 2px rgba(0,0,0,0.02)", paddingRight: 44 }} 
-                  type={showPw ? "text" : "password"} 
-                  placeholder={ph} 
-                  value={form[id]} 
-                  onChange={set(id)} 
-                  onFocus={e => { e.target.style.background = "#fff"; e.target.style.borderColor = "#6366F1"; e.target.style.boxShadow = "0 0 0 3px rgba(99,102,241,0.1)"; }}
-                  onBlur={e => { e.target.style.background = "#F8FAFC"; e.target.style.borderColor = errors[id] ? "#FCA5A5" : "#E2E8F0"; e.target.style.boxShadow = "inset 0 1px 2px rgba(0,0,0,0.02)"; }}
-                />
-                <button type="button" onClick={() => setShowPw((s) => !s)} style={{ position: "absolute", right: 10, top: "50%", transform: "translateY(-50%)", background: "none", border: "none", cursor: "pointer", color: "#94A3B8", padding: 4, display: "flex" }}>
-                  {showPw ? (
-                    <svg width="16" height="16" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24" /><line x1="1" y1="1" x2="23" y2="23" /></svg>
-                  ) : (
-                    <svg width="16" height="16" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z" /><circle cx="12" cy="12" r="3" /></svg>
-                  )}
-                </button>
+      {errors.password && <p style={{ fontSize: 12, color: "#EF4444", fontWeight: 600, marginTop: 5, display: "flex", alignItems: "center", gap: 4 }}><span>{"⚠️"}</span>{errors.password}</p>}
+    </div>
+  );
+
+  return (
+    <div style={{ maxWidth: isIncharge ? 860 : 560, margin: "0 auto" }}>
+      <div style={{ marginBottom: 28 }}>
+        <h2 style={{ fontSize: 24, fontWeight: 700, letterSpacing: "-0.02em", color: "#0F172A" }}>{isIncharge ? "Register ward in-charge" : "Register member"}</h2>
+        <p style={{ fontSize: 14, color: "#64748B", marginTop: 4 }}>{isIncharge ? "Create a login account for a ward in-charge and assign their ward(s)." : "Add a new nurse or midwife to the 2023/2024 rotation."}</p>
+      </div>
+
+      {adminMode && (
+        <div style={{ display: "flex", gap: 10, marginBottom: 28 }}>
+          {[{ val: "Member", icon: "🏥", title: "Member", sub: "Nurse or Midwife" }, { val: "In-charge", icon: "🔑", title: "In-charge", sub: "Ward supervisor" }].map(r => (
+            <button key={r.val} onClick={() => { setRole(r.val); setErrors({}); }} style={{ flex: 1, display: "flex", alignItems: "center", gap: 14, padding: "14px 18px", border: role === r.val ? "2px solid #6366F1" : "1.5px solid #E2E8F0", background: role === r.val ? "#EEF2FF" : "#fff", borderRadius: 12, cursor: "pointer", transition: "all 0.15s", textAlign: "left" }}>
+              <div style={{ width: 40, height: 40, borderRadius: 10, background: role === r.val ? "#6366F1" : "#F1F5F9", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 18, flexShrink: 0 }}>{r.icon}</div>
+              <div>
+                <div style={{ fontSize: 14, fontWeight: 700, color: role === r.val ? "#4338CA" : "#0F172A" }}>{r.title}</div>
+                <div style={{ fontSize: 12, color: role === r.val ? "#6366F1" : "#64748B", marginTop: 2 }}>{r.sub}</div>
               </div>
-            ) : (
-              <input 
-                style={{ ...INP, padding: "12px 14px", borderColor: errors[id] ? "#FCA5A5" : "#E2E8F0", background: "#F8FAFC", boxShadow: "inset 0 1px 2px rgba(0,0,0,0.02)" }} 
-                type={type} 
-                placeholder={ph} 
-                value={form[id]} 
-                onChange={set(id)} 
-                onFocus={e => { e.target.style.background = "#fff"; e.target.style.borderColor = "#6366F1"; e.target.style.boxShadow = "0 0 0 3px rgba(99,102,241,0.1)"; }}
-                onBlur={e => { e.target.style.background = "#F8FAFC"; e.target.style.borderColor = errors[id] ? "#FCA5A5" : "#E2E8F0"; e.target.style.boxShadow = "inset 0 1px 2px rgba(0,0,0,0.02)"; }}
-              />
-            )}
-            {errors[id] && <p style={{ fontSize: 12, fontWeight: 600, color: "#EF4444", marginTop: 6, display: "flex", alignItems: "center", gap: 4 }}><span style={{fontSize: 14}}>⚠️</span> {errors[id]}</p>}
+              {role === r.val && (
+                <div style={{ marginLeft: "auto", width: 20, height: 20, borderRadius: "50%", background: "#6366F1", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
+                  <svg width="10" height="10" viewBox="0 0 10 10" fill="none"><path d="M1.5 5l2.5 2.5 4.5-4.5" stroke="white" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" /></svg>
+                </div>
+              )}
+            </button>
+          ))}
+        </div>
+      )}
+
+      {isIncharge ? (
+        <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 20, alignItems: "start" }}>
+          <div className="premium-card" style={{ padding: "28px", borderRadius: 16 }}>
+            <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 24, paddingBottom: 16, borderBottom: "1px solid #F1F5F9" }}>
+              <div style={{ width: 32, height: 32, borderRadius: 8, background: "#EEF2FF", display: "flex", alignItems: "center", justifyContent: "center" }}>
+                <svg width="15" height="15" fill="none" stroke="#6366F1" strokeWidth="2" viewBox="0 0 24 24"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+              </div>
+              <div>
+                <div style={{ fontSize: 13, fontWeight: 700, color: "#0F172A" }}>Personal details</div>
+                <div style={{ fontSize: 11, color: "#94A3B8", marginTop: 1 }}>Account credentials</div>
+              </div>
+            </div>
+            <RegFormField id="name" label="Full name" placeholder="e.g. Abena Mensah" value={form.name} onChange={set("name")} error={errors.name} />
+            <RegFormField id="email" label="Email address" type="email" placeholder="e.g. abena@hospital.com" value={form.email} onChange={set("email")} error={errors.email} />
+            <RegFormField id="phone" label="Phone number" type="tel" placeholder="e.g. 0244 000 000" value={form.phone} onChange={set("phone")} error={errors.phone} />
+            <PasswordField />
+            <button onClick={submit} style={{ width: "100%", padding: "13px", background: "linear-gradient(135deg,#6366F1,#8B5CF6)", color: "#fff", border: "none", borderRadius: 10, fontSize: 14, fontWeight: 700, cursor: "pointer", boxShadow: "0 4px 14px rgba(99,102,241,0.3)", marginTop: 8, transition: "all 0.2s" }} onMouseEnter={e => e.currentTarget.style.transform = "translateY(-1px)"} onMouseLeave={e => e.currentTarget.style.transform = "translateY(0)"}>
+              Create in-charge account →
+            </button>
           </div>
-        ))}
-        <div style={{ marginBottom: 32 }}>
-          <label style={{ display: "block", fontSize: 11, fontWeight: 700, color: "#64748B", marginBottom: 10, letterSpacing: "0.05em", textTransform: "uppercase" }}>GROUP</label>
-          <div className="register-grid">
-            {[{ val: "nursing", icon: "🏥", title: "General Nursing", desc: "52-week programme" }, { val: "midwifery", icon: "👶", title: "Midwifery", desc: "52-week programme" }].map((g) => (
-              <div 
-                key={g.val} 
-                onClick={() => setForm((f) => ({ ...f, group: g.val }))} 
-                style={{ border: form.group === g.val ? "2px solid #6366F1" : "1.5px solid #E2E8F0", background: form.group === g.val ? "#EEF2FF" : "#fff", borderRadius: 12, padding: "16px", cursor: "pointer", transition: "all 0.15s", display: "flex", flexDirection: "column", gap: 6, opacity: form.group === g.val ? 1 : 0.7 }}
-                onMouseEnter={e => { if(form.group !== g.val) { e.currentTarget.style.borderColor = "#CBD5E1"; e.currentTarget.style.opacity = 1; } }}
-                onMouseLeave={e => { if(form.group !== g.val) { e.currentTarget.style.borderColor = "#E2E8F0"; e.currentTarget.style.opacity = 0.7; } }}
-              >
-                <div style={{ fontSize: 26 }}>{g.icon}</div>
-                <div style={{ fontSize: 14, fontWeight: 700, color: form.group === g.val ? "#4338CA" : "#0F172A" }}>{g.title}</div>
-                <div style={{ fontSize: 12, color: form.group === g.val ? "#6366F1" : "#64748B" }}>{g.desc}</div>
+
+          <div className="premium-card" style={{ padding: "28px", borderRadius: 16 }}>
+            <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 16, paddingBottom: 16, borderBottom: "1px solid #F1F5F9" }}>
+              <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+                <div style={{ width: 32, height: 32, borderRadius: 8, background: "#FFF7ED", display: "flex", alignItems: "center", justifyContent: "center" }}>
+                  <svg width="15" height="15" fill="none" stroke="#F97316" strokeWidth="2" viewBox="0 0 24 24"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
+                </div>
+                <div>
+                  <div style={{ fontSize: 13, fontWeight: 700, color: "#0F172A" }}>Assign wards</div>
+                  <div style={{ fontSize: 11, color: "#94A3B8", marginTop: 1 }}>Select one or more</div>
+                </div>
               </div>
-            ))}
+              <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+                {form.wards.length > 0 && <span style={{ background: "#6366F1", color: "#fff", fontSize: 11, fontWeight: 700, padding: "3px 10px", borderRadius: 99 }}>{form.wards.length} selected</span>}
+                <button onClick={toggleAll} style={{ fontSize: 11, fontWeight: 700, padding: "5px 12px", borderRadius: 8, border: "1.5px solid #E2E8F0", background: allSelected ? "#FFF1F2" : "#F8FAFC", color: allSelected ? "#BE123C" : "#475569", cursor: "pointer" }}>{allSelected ? "Deselect all" : "Select all"}</button>
+              </div>
+            </div>
+
+            {errors.wards && (
+              <div style={{ display: "flex", alignItems: "center", gap: 6, padding: "9px 12px", background: "#FFF1F2", borderRadius: 8, marginBottom: 14, fontSize: 12, color: "#BE123C", fontWeight: 600 }}>
+                <svg width="13" height="13" fill="none" stroke="currentColor" strokeWidth="2.5" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+                {errors.wards}
+              </div>
+            )}
+
+            {form.wards.length > 0 && (
+              <div style={{ display: "flex", flexWrap: "wrap", gap: 6, marginBottom: 14, padding: "10px 12px", background: "#F8FAFC", borderRadius: 10, border: "1px solid #E2E8F0" }}>
+                {form.wards.map(w => {
+                  const info = WARD_LOOKUP[w];
+                  return (
+                    <span key={w} onClick={() => toggleWard(w)} style={{ display: "inline-flex", alignItems: "center", gap: 5, background: info?.color || "#EEF2FF", color: info?.textColor || "#4338CA", border: "1px solid " + (info?.accent || "#6366F1") + "40", fontSize: 11, fontWeight: 700, padding: "4px 10px", borderRadius: 99, cursor: "pointer" }}>
+                      {w}
+                      <svg width="9" height="9" fill="none" stroke="currentColor" strokeWidth="2.5" viewBox="0 0 24 24"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+                    </span>
+                  );
+                })}
+              </div>
+            )}
+
+            <div style={{ display: "flex", flexDirection: "column", gap: 14, maxHeight: 360, overflowY: "auto", paddingRight: 2 }}>
+              {WARD_GROUPS.map(g => (
+                <div key={g.group}>
+                  <div style={{ fontSize: 10, fontWeight: 700, color: "#94A3B8", textTransform: "uppercase", letterSpacing: "0.08em", marginBottom: 6, display: "flex", alignItems: "center", gap: 6 }}>
+                    <div style={{ width: 8, height: 8, borderRadius: 2, background: g.accent }} />{g.group}
+                  </div>
+                  <div style={{ display: "flex", flexDirection: "column", gap: 3 }}>
+                    {g.wards.map(w => {
+                      const checked = form.wards.includes(w.name);
+                      return (
+                        <div key={w.name} onClick={() => toggleWard(w.name)} style={{ display: "flex", alignItems: "center", gap: 12, padding: "9px 12px", borderRadius: 9, cursor: "pointer", background: checked ? g.color : "#F8FAFC", border: "1.5px solid " + (checked ? g.accent + "60" : "transparent"), transition: "all 0.12s" }} onMouseEnter={e => { if (!checked) e.currentTarget.style.background = "#F1F5F9"; }} onMouseLeave={e => { if (!checked) e.currentTarget.style.background = "#F8FAFC"; }}>
+                          <div style={{ width: 17, height: 17, borderRadius: 5, flexShrink: 0, border: "2px solid " + (checked ? g.accent : "#CBD5E1"), background: checked ? g.accent : "#fff", display: "flex", alignItems: "center", justifyContent: "center", transition: "all 0.12s" }}>
+                            {checked && <svg width="9" height="9" viewBox="0 0 10 10" fill="none"><path d="M1.5 5l2.5 2.5 4.5-4.5" stroke="white" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"/></svg>}
+                          </div>
+                          <span style={{ fontSize: 13, fontWeight: checked ? 700 : 500, color: checked ? g.textColor : "#334155", flex: 1 }}>{w.name}</span>
+                          {checked && <div style={{ width: 6, height: 6, borderRadius: "50%", background: g.accent, flexShrink: 0 }} />}
+                        </div>
+                      );
+                    })}
+                  </div>
+                </div>
+              ))}
+            </div>
           </div>
         </div>
-        <button 
-          onClick={submit} 
-          style={{ width: "100%", padding: "14px", background: "#6366F1", color: "#fff", border: "none", borderRadius: 10, fontSize: 15, fontWeight: 700, cursor: "pointer", boxShadow: "0 4px 12px rgba(99,102,241,0.2)", transition: "all 0.2s" }}
-          onMouseEnter={e => e.currentTarget.style.transform = "translateY(-1px)"}
-          onMouseLeave={e => e.currentTarget.style.transform = "translateY(0)"}
-        >
-          Complete Registration
-        </button>
-      </div>
+
+      ) : (
+        <div className="premium-card" style={{ padding: "32px", borderRadius: 16 }}>
+          <RegFormField id="name" label="Full name" placeholder="e.g. Abena Mensah" value={form.name} onChange={set("name")} error={errors.name} />
+          <RegFormField id="email" label="Email address" type="email" placeholder="e.g. abena@rota.com" value={form.email} onChange={set("email")} error={errors.email} />
+          <RegFormField id="phone" label="Phone number" type="tel" placeholder="e.g. 0244 000 000" value={form.phone} onChange={set("phone")} error={errors.phone} />
+          <PasswordField />
+          <RegFormField id="school" label="Training institution" placeholder="e.g. Korle Bu School of Nursing" value={form.school} onChange={set("school")} error={errors.school} />
+          <div style={{ marginBottom: 28 }}>
+            <label style={{ display: "block", fontSize: 11, fontWeight: 700, color: "#64748B", marginBottom: 10, letterSpacing: "0.05em", textTransform: "uppercase" }}>GROUP</label>
+            <div className="register-grid">
+              {[{ val: "nursing", icon: "🏥", title: "General Nursing", desc: "52-week programme" }, { val: "midwifery", icon: "👶", title: "Midwifery", desc: "52-week programme" }].map((g) => (
+                <div key={g.val} onClick={() => setForm((f) => ({ ...f, group: g.val }))} style={{ border: form.group === g.val ? "2px solid #6366F1" : "1.5px solid #E2E8F0", background: form.group === g.val ? "#EEF2FF" : "#fff", borderRadius: 12, padding: "16px", cursor: "pointer", transition: "all 0.15s", display: "flex", flexDirection: "column", gap: 6, opacity: form.group === g.val ? 1 : 0.7 }} onMouseEnter={e => { if (form.group !== g.val) { e.currentTarget.style.borderColor = "#CBD5E1"; e.currentTarget.style.opacity = 1; } }} onMouseLeave={e => { if (form.group !== g.val) { e.currentTarget.style.borderColor = "#E2E8F0"; e.currentTarget.style.opacity = 0.7; } }}>
+                  <div style={{ fontSize: 26 }}>{g.icon}</div>
+                  <div style={{ fontSize: 14, fontWeight: 700, color: form.group === g.val ? "#4338CA" : "#0F172A" }}>{g.title}</div>
+                  <div style={{ fontSize: 12, color: form.group === g.val ? "#6366F1" : "#64748B" }}>{g.desc}</div>
+                </div>
+              ))}
+            </div>
+          </div>
+          <button onClick={submit} style={{ width: "100%", padding: "14px", background: "#6366F1", color: "#fff", border: "none", borderRadius: 10, fontSize: 15, fontWeight: 700, cursor: "pointer", boxShadow: "0 4px 12px rgba(99,102,241,0.2)", transition: "all 0.2s" }} onMouseEnter={e => e.currentTarget.style.transform = "translateY(-1px)"} onMouseLeave={e => e.currentTarget.style.transform = "translateY(0)"}>
+            Complete Registration
+          </button>
+        </div>
+      )}
     </div>
   );
 }
@@ -679,6 +789,141 @@ function AssignTab({ members, assignments, onBulkAssign, initialTargetIds }) {
 }
 
 // ─── Members ──────────────────────────────────────────────────────────────────
+
+function InchargesTab() {
+  const [incharges, setIncharges] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
+  const [q, setQ] = useState("");
+
+  async function fetchIncharges() {
+    const { data, error: err } = await supabase.from("incharges").select("*").order("created_at", { ascending: false });
+    if (err) {
+      console.error("incharges fetch error:", err);
+      setError(err.message);
+    } else {
+      setIncharges(data || []);
+      setError(null);
+    }
+    setLoading(false);
+  }
+
+  useEffect(() => {
+    fetchIncharges();
+    const sub = supabase.channel("incharges-changes")
+      .on("postgres_changes", { event: "*", schema: "public", table: "incharges" }, fetchIncharges)
+      .subscribe();
+    return () => supabase.removeChannel(sub);
+  }, []);
+
+  const filtered = incharges.filter(u =>
+    u.name?.toLowerCase().includes(q.toLowerCase()) ||
+    u.email?.toLowerCase().includes(q.toLowerCase()) ||
+    (u.wards || []).some(w => w.toLowerCase().includes(q.toLowerCase()))
+  );
+
+  return (
+    <div>
+      <div style={{ marginBottom: 32 }}>
+        <h2 style={{ fontSize: 26, fontWeight: 700, letterSpacing: "-0.02em", color: "#0F172A" }}>In-charges</h2>
+        <p style={{ fontSize: 15, color: "#64748B", marginTop: 4 }}>All registered ward in-charges.</p>
+      </div>
+
+      {error && (
+        <div style={{ background: "#FFF1F2", border: "1px solid #FECDD3", borderRadius: 12, padding: "14px 18px", marginBottom: 24, fontSize: 13, color: "#BE123C", fontWeight: 600, display: "flex", alignItems: "flex-start", gap: 10 }}>
+          <svg width="16" height="16" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24" style={{ flexShrink: 0, marginTop: 1 }}><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+          <div>
+            <div>Could not load in-charges: {error}</div>
+            <div style={{ fontWeight: 400, marginTop: 4, fontSize: 12 }}>Make sure the <code>incharges</code> table exists and RLS allows reads. Run the SQL below in your Supabase SQL editor:</div>
+            <pre style={{ marginTop: 8, background: "#FFF", border: "1px solid #FECDD3", borderRadius: 6, padding: "8px 12px", fontSize: 11, overflowX: "auto", color: "#0F172A", fontWeight: 400 }}>{`create table if not exists incharges (
+  id uuid primary key default gen_random_uuid(),
+  auth_id uuid,
+  name text,
+  email text,
+  phone text,
+  wards text[],
+  created_at timestamptz default now()
+);
+alter table incharges enable row level security;
+create policy "Admin read" on incharges for select using (true);
+create policy "Admin insert" on incharges for insert with check (true);`}</pre>
+          </div>
+        </div>
+      )}
+
+      <div style={{ display: "grid", gridTemplateColumns: "repeat(2,1fr)", gap: 14, marginBottom: 28 }}>
+        {[
+          { l: "Total In-charges", v: incharges.length, a: "#6366F1", icon: "🔑" },
+          { l: "Wards Covered", v: [...new Set(incharges.flatMap(u => u.wards || []))].length, a: "#F97316", icon: "🏥" },
+        ].map(m => (
+          <div key={m.l} className="premium-card" style={{ padding: "20px", position: "relative", overflow: "hidden", borderRadius: 16 }}>
+            <div style={{ position: "absolute", top: 0, left: 0, bottom: 0, width: 4, background: m.a }} />
+            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: 12 }}>
+              <div style={{ fontSize: 13, fontWeight: 700, color: "#64748B", textTransform: "uppercase", letterSpacing: "0.05em" }}>{m.l}</div>
+              <div style={{ fontSize: 20 }}>{m.icon}</div>
+            </div>
+            <div style={{ fontSize: 32, fontWeight: 800, color: "#0F172A", lineHeight: 1 }}>{m.v}</div>
+          </div>
+        ))}
+      </div>
+
+      <div style={{ marginBottom: 16 }}>
+        <input style={{ ...INP, maxWidth: 300, padding: "10px 14px", background: "#fff" }} placeholder="Search name, email or ward…" value={q} onChange={e => setQ(e.target.value)} />
+      </div>
+
+      {loading ? (
+        <div style={{ padding: 60, textAlign: "center", color: "#94A3B8", fontSize: 14 }}>Loading...</div>
+      ) : (
+        <div className="table-wrapper">
+          {filtered.length === 0 ? (
+            <div style={{ textAlign: "center", padding: 60, color: "#94A3B8" }}>
+              <div style={{ fontSize: 40, marginBottom: 16 }}>🔍</div>
+              <div style={{ fontSize: 16, fontWeight: 600, color: "#475569" }}>{incharges.length === 0 ? "No in-charges registered yet" : "No results found"}</div>
+            </div>
+          ) : (
+            <table className="responsive-table">
+              <thead>
+                <tr style={{ background: "#F8FAFC", borderBottom: "1px solid #E2E8F0" }}>
+                  {["In-charge", "Email", "Phone", "Assigned Wards"].map(h => (
+                    <th key={h} style={{ textAlign: "left", padding: "14px 18px", fontSize: 11, fontWeight: 700, color: "#64748B", textTransform: "uppercase", letterSpacing: "0.05em" }}>{h}</th>
+                  ))}
+                </tr>
+              </thead>
+              <tbody>
+                {filtered.map((u, i) => (
+                  <tr key={u.id} style={{ background: i % 2 === 0 ? "#fff" : "#FAFAFA", borderBottom: "1px solid #F1F5F9" }} className="hover-row">
+                    <td style={{ padding: "16px 18px", verticalAlign: "middle" }}>
+                      <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
+                        <div style={{ width: 36, height: 36, borderRadius: "50%", background: "#FFF7ED", color: "#C2410C", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 13, fontWeight: 700, flexShrink: 0 }}>
+                          {(u.name || "").split(" ").map(w => w[0]).join("").slice(0, 2).toUpperCase()}
+                        </div>
+                        <span style={{ fontWeight: 700, color: "#0F172A", fontSize: 14 }}>{u.name || "—"}</span>
+                      </div>
+                    </td>
+                    <td style={{ padding: "16px 18px", color: "#64748B", verticalAlign: "middle", fontSize: 13 }}>{u.email}</td>
+                    <td style={{ padding: "16px 18px", color: "#64748B", verticalAlign: "middle", fontSize: 13 }}>{u.phone || "—"}</td>
+                    <td style={{ padding: "16px 18px", verticalAlign: "middle" }}>
+                      {(u.wards || []).length === 0 ? (
+                        <span style={{ color: "#94A3B8", fontSize: 13 }}>—</span>
+                      ) : (
+                        <div style={{ display: "flex", flexWrap: "wrap", gap: 5 }}>
+                          {(u.wards || []).map(w => {
+                            const info = WARD_LOOKUP[w];
+                            return <span key={w} style={{ fontSize: 11, fontWeight: 700, padding: "3px 10px", borderRadius: 99, background: info?.color || "#F1F5F9", color: info?.textColor || "#334155" }}>{w}</span>;
+                          })}
+                        </div>
+                      )}
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          )}
+        </div>
+      )}
+    </div>
+  );
+}
 
 function MembersTab({ members, assignments }) {
   const [q, setQ] = useState(""); const [filter, setFilter] = useState("all");
@@ -991,6 +1236,227 @@ function LoginScreen({ onGoRegister }) {
   );
 }
 
+// ─── In-Charge View ──────────────────────────────────────────────────────────
+
+function InChargeMemberRow({ a, i, cols }) {
+  return (
+    <tr style={{ background: i % 2 === 0 ? "#fff" : "#FAFAFA", borderBottom: "1px solid #F1F5F9" }}>
+      <td style={{ padding: "14px 16px", verticalAlign: "middle" }}>
+        <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+          <Avatar name={a.member.name} group={a.member.group} size={34} />
+          <div>
+            <div style={{ fontWeight: 700, fontSize: 14, color: "#0F172A" }}>{a.member.name}</div>
+            <div style={{ fontSize: 11, color: "#64748B", marginTop: 1 }}>{a.member.school}</div>
+          </div>
+        </div>
+      </td>
+      <td style={{ padding: "14px 16px", verticalAlign: "middle" }}><GroupBadge group={a.member.group} /></td>
+      <td style={{ padding: "14px 16px", color: "#64748B", fontSize: 13, verticalAlign: "middle" }}>{fmtDate(a.startDate)}</td>
+      <td style={{ padding: "14px 16px", color: "#64748B", fontSize: 13, verticalAlign: "middle" }}>{fmtDate(a.endDate)}</td>
+      {cols === "full" && (
+        <>
+          <td style={{ padding: "14px 16px", verticalAlign: "middle" }}>
+            <span style={{ fontWeight: 700, color: a.daysLeft <= 7 ? "#EA580C" : "#334155", fontSize: 13 }}>
+              {a.daysLeft === 0 ? "Today" : a.daysLeft + "d"}
+            </span>
+          </td>
+          <td style={{ padding: "14px 16px", verticalAlign: "middle" }}><StatusChip status={a.status} /></td>
+        </>
+      )}
+    </tr>
+  );
+}
+
+function InChargeTab({ user, members, assignments }) {
+  const wards = user.wards || [];
+  const [activeWard, setActiveWard] = useState("all");
+
+  function enrichForWard(wardName) {
+    const now = new Date();
+    return assignments
+      .filter(a => a.ward === wardName)
+      .map(a => {
+        const member = members.find(m => m.id === a.memberId);
+        if (!member) return null;
+        const dl = daysLeft(a.endDate);
+        const ds = Math.ceil((new Date(a.startDate) - now) / (1000 * 60 * 60 * 24));
+        let status;
+        if (ds > 0) status = "upcoming";
+        else if (dl < 0) status = "completed";
+        else if (dl === 0) status = "completing_today";
+        else if (dl <= 7) status = "ending_soon";
+        else status = "active";
+        return { ...a, member, status, daysLeft: dl };
+      })
+      .filter(Boolean)
+      .sort((a, b) => new Date(a.startDate) - new Date(b.startDate));
+  }
+
+  const wardData = useMemo(() =>
+    wards.map(w => ({ ward: w, wd: WARD_LOOKUP[w], rows: enrichForWard(w) })),
+    [assignments, members, wards]
+  );
+
+  const singleData = useMemo(() => {
+    if (activeWard === "all") return null;
+    return wardData.find(d => d.ward === activeWard) || null;
+  }, [activeWard, wardData]);
+
+  if (wards.length === 0) return (
+    <div style={{ padding: 60, textAlign: "center", color: "#94A3B8" }}>
+      <div style={{ fontSize: 40, marginBottom: 12 }}>{"🔑"}</div>
+      <div style={{ fontSize: 16, fontWeight: 600, color: "#475569" }}>No wards assigned</div>
+      <div style={{ fontSize: 13, marginTop: 4 }}>Contact your admin to assign wards to your account.</div>
+    </div>
+  );
+
+  const WardTable = ({ rows, showWardCol }) => {
+    const active = rows.filter(a => ["active", "ending_soon", "completing_today"].includes(a.status));
+    const upcoming = rows.filter(a => a.status === "upcoming");
+    const headers = showWardCol
+      ? ["Member", "Ward", "Group", "Started", "Ends", "Days left", "Status"]
+      : ["Member", "Group", "Started", "Ends", "Days left", "Status"];
+    if (rows.length === 0) return (
+      <div style={{ padding: "40px", textAlign: "center", color: "#94A3B8", background: "#F8FAFC", borderRadius: 12, border: "1px dashed #E2E8F0" }}>
+        <div style={{ fontSize: 28, marginBottom: 8 }}>{"🏥"}</div>
+        <div style={{ fontSize: 14, fontWeight: 600, color: "#475569" }}>No one assigned yet</div>
+      </div>
+    );
+    return (
+      <div style={{ display: "flex", flexDirection: "column", gap: 20 }}>
+        {active.length > 0 && (
+          <div>
+            <div style={{ fontSize: 11, fontWeight: 700, color: "#065F46", textTransform: "uppercase", letterSpacing: "0.06em", marginBottom: 10, display: "flex", alignItems: "center", gap: 6 }}>
+              <span style={{ width: 8, height: 8, background: "#10B981", borderRadius: "50%", display: "inline-block" }} /> Current ({active.length})
+            </div>
+            <div className="table-wrapper">
+              <table className="responsive-table">
+                <thead><tr style={{ background: "#F8FAFC", borderBottom: "1px solid #E2E8F0" }}>
+                  {headers.map(h => <th key={h} style={{ textAlign: "left", padding: "12px 16px", fontSize: 11, fontWeight: 700, color: "#64748B", textTransform: "uppercase", letterSpacing: "0.05em" }}>{h}</th>)}
+                </tr></thead>
+                <tbody>
+                  {active.map((a, i) => (
+                    <tr key={a.id} style={{ background: i % 2 === 0 ? "#fff" : "#FAFAFA", borderBottom: "1px solid #F1F5F9" }}>
+                      <td style={{ padding: "14px 16px", verticalAlign: "middle" }}>
+                        <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+                          <Avatar name={a.member.name} group={a.member.group} size={34} />
+                          <div>
+                            <div style={{ fontWeight: 700, fontSize: 14, color: "#0F172A" }}>{a.member.name}</div>
+                            <div style={{ fontSize: 11, color: "#64748B", marginTop: 1 }}>{a.member.school}</div>
+                          </div>
+                        </div>
+                      </td>
+                      {showWardCol && (
+                        <td style={{ padding: "14px 16px", verticalAlign: "middle" }}>
+                          <span style={{ fontSize: 12, fontWeight: 700, color: WARD_LOOKUP[a.ward]?.textColor || "#334155", background: WARD_LOOKUP[a.ward]?.color || "#F8FAFC", padding: "3px 10px", borderRadius: 99 }}>{a.ward}</span>
+                        </td>
+                      )}
+                      <td style={{ padding: "14px 16px", verticalAlign: "middle" }}><GroupBadge group={a.member.group} /></td>
+                      <td style={{ padding: "14px 16px", color: "#64748B", fontSize: 13, verticalAlign: "middle" }}>{fmtDate(a.startDate)}</td>
+                      <td style={{ padding: "14px 16px", color: "#64748B", fontSize: 13, verticalAlign: "middle" }}>{fmtDate(a.endDate)}</td>
+                      <td style={{ padding: "14px 16px", verticalAlign: "middle" }}>
+                        <span style={{ fontWeight: 700, color: a.daysLeft <= 7 ? "#EA580C" : "#334155", fontSize: 13 }}>{a.daysLeft === 0 ? "Today" : a.daysLeft + "d"}</span>
+                      </td>
+                      <td style={{ padding: "14px 16px", verticalAlign: "middle" }}><StatusChip status={a.status} /></td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          </div>
+        )}
+        {upcoming.length > 0 && (
+          <div>
+            <div style={{ fontSize: 11, fontWeight: 700, color: "#64748B", textTransform: "uppercase", letterSpacing: "0.06em", marginBottom: 10 }}>Upcoming ({upcoming.length})</div>
+            <div className="table-wrapper">
+              <table className="responsive-table">
+                <thead><tr style={{ background: "#F8FAFC", borderBottom: "1px solid #E2E8F0" }}>
+                  {["Member", ...(showWardCol ? ["Ward"] : []), "Group", "Starts", "Ends"].map(h => <th key={h} style={{ textAlign: "left", padding: "12px 16px", fontSize: 11, fontWeight: 700, color: "#64748B", textTransform: "uppercase", letterSpacing: "0.05em" }}>{h}</th>)}
+                </tr></thead>
+                <tbody>
+                  {upcoming.map((a, i) => (
+                    <tr key={a.id} style={{ background: i % 2 === 0 ? "#fff" : "#FAFAFA", borderBottom: "1px solid #F1F5F9" }}>
+                      <td style={{ padding: "14px 16px", verticalAlign: "middle" }}>
+                        <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+                          <Avatar name={a.member.name} group={a.member.group} size={34} />
+                          <div style={{ fontWeight: 700, fontSize: 14, color: "#0F172A" }}>{a.member.name}</div>
+                        </div>
+                      </td>
+                      {showWardCol && (
+                        <td style={{ padding: "14px 16px", verticalAlign: "middle" }}>
+                          <span style={{ fontSize: 12, fontWeight: 700, color: WARD_LOOKUP[a.ward]?.textColor || "#334155", background: WARD_LOOKUP[a.ward]?.color || "#F8FAFC", padding: "3px 10px", borderRadius: 99 }}>{a.ward}</span>
+                        </td>
+                      )}
+                      <td style={{ padding: "14px 16px", verticalAlign: "middle" }}><GroupBadge group={a.member.group} /></td>
+                      <td style={{ padding: "14px 16px", color: "#64748B", fontSize: 13, verticalAlign: "middle" }}>{fmtDate(a.startDate)}</td>
+                      <td style={{ padding: "14px 16px", color: "#64748B", fontSize: 13, verticalAlign: "middle" }}>{fmtDate(a.endDate)}</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          </div>
+        )}
+      </div>
+    );
+  };
+
+  const totalActive = wardData.reduce((s, d) => s + d.rows.filter(a => ["active","ending_soon","completing_today"].includes(a.status)).length, 0);
+  const totalUpcoming = wardData.reduce((s, d) => s + d.rows.filter(a => a.status === "upcoming").length, 0);
+
+  return (
+    <div style={{ maxWidth: 900, margin: "0 auto" }}>
+      <div style={{ marginBottom: 28 }}>
+        <h2 style={{ fontSize: 26, fontWeight: 700, letterSpacing: "-0.02em", color: "#0F172A" }}>My Wards</h2>
+        <p style={{ fontSize: 15, color: "#64748B", marginTop: 4 }}>People assigned to your ward(s).</p>
+      </div>
+
+      {/* Tabs */}
+      <div style={{ display: "flex", gap: 6, marginBottom: 28, flexWrap: "wrap" }}>
+        <button onClick={() => setActiveWard("all")} style={{ padding: "8px 16px", fontSize: 13, fontWeight: 700, borderRadius: 99, cursor: "pointer", border: activeWard === "all" ? "2px solid #6366F1" : "1.5px solid #E2E8F0", background: activeWard === "all" ? "#EEF2FF" : "#fff", color: activeWard === "all" ? "#4338CA" : "#64748B", transition: "all 0.15s", display: "flex", alignItems: "center", gap: 6 }}>
+          All wards
+          <span style={{ background: activeWard === "all" ? "#6366F1" : "#E2E8F0", color: activeWard === "all" ? "#fff" : "#64748B", fontSize: 10, fontWeight: 700, padding: "1px 7px", borderRadius: 99 }}>{totalActive}</span>
+        </button>
+        {wardData.map(({ ward, wd, rows }) => {
+          const isSel = activeWard === ward;
+          const cnt = rows.filter(a => ["active","ending_soon","completing_today"].includes(a.status)).length;
+          return (
+            <button key={ward} onClick={() => setActiveWard(ward)} style={{ padding: "8px 16px", fontSize: 13, fontWeight: 700, borderRadius: 99, cursor: "pointer", border: isSel ? "2px solid " + (wd?.accent || "#6366F1") : "1.5px solid #E2E8F0", background: isSel ? (wd?.color || "#EEF2FF") : "#fff", color: isSel ? (wd?.textColor || "#4338CA") : "#64748B", transition: "all 0.15s", display: "flex", alignItems: "center", gap: 6 }}>
+              {ward}
+              <span style={{ background: isSel ? (wd?.accent || "#6366F1") : "#E2E8F0", color: isSel ? "#fff" : "#64748B", fontSize: 10, fontWeight: 700, padding: "1px 7px", borderRadius: 99 }}>{cnt}</span>
+            </button>
+          );
+        })}
+      </div>
+
+      {activeWard === "all" ? (
+        <div style={{ display: "flex", flexDirection: "column", gap: 32 }}>
+          {wardData.map(({ ward, wd, rows }) => (
+            <div key={ward}>
+              <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 14, paddingBottom: 10, borderBottom: "2px solid " + (wd?.accent || "#E2E8F0") + "30" }}>
+                {wd && <div style={{ width: 10, height: 10, borderRadius: 3, background: wd.accent }} />}
+                <span style={{ fontSize: 16, fontWeight: 700, color: wd?.textColor || "#0F172A" }}>{ward}</span>
+                <span style={{ fontSize: 12, color: "#94A3B8" }}>· {rows.filter(a => ["active","ending_soon","completing_today"].includes(a.status)).length} current</span>
+              </div>
+              <WardTable rows={rows} showWardCol={false} />
+            </div>
+          ))}
+        </div>
+      ) : (
+        <div>
+          <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 20 }}>
+            {singleData?.wd && <div style={{ width: 12, height: 12, borderRadius: 3, background: singleData.wd.accent }} />}
+            <span style={{ fontSize: 18, fontWeight: 700, color: singleData?.wd?.textColor || "#0F172A" }}>{activeWard}</span>
+            <span style={{ fontSize: 12, color: "#94A3B8" }}>· {singleData?.rows.filter(a => ["active","ending_soon","completing_today"].includes(a.status)).length || 0} current, {singleData?.rows.filter(a => a.status === "upcoming").length || 0} upcoming</span>
+          </div>
+          <WardTable rows={singleData?.rows || []} showWardCol={false} />
+        </div>
+      )}
+    </div>
+  );
+}
+
+
 // ─── Member Dashboard ─────────────────────────────────────────────────────────
 
 function MemberDashboardTab({ user, members, assignments }) {
@@ -1103,7 +1569,7 @@ function MemberDashboardTab({ user, members, assignments }) {
 // ─── App Root ─────────────────────────────────────────────────────────────────
 
 function MainApp({ user, onLogout }) {
-  const [tab, setTab] = useState(user.role === "Member" ? "memberDashboard" : "dashboard");
+  const [tab, setTab] = useState(user.role === "Member" ? "memberDashboard" : user.role === "In-charge" ? "inCharge" : "dashboard");
   const [assignTargetIds, setAssignTargetIds] = useState([]);
   const [members, setMembers] = useState([]);
   const [assignments, setAssignments] = useState([]);
@@ -1136,18 +1602,41 @@ function MainApp({ user, onLogout }) {
     };
   }, []);
 
-  function handleRegister(m) {
-    const { id, ...memberData } = m;
-    supabase.from('members').insert([memberData]).select().single()
-      .then(({ data, error }) => {
-        if (error) throw error;
-        setMembers((p) => [...p, data]);
-        showToast(`${data.name} registered`);
-      })
-      .catch(err => {
-        console.error(err);
-        showToast("Error registering member");
+  async function handleRegister(form) {
+    if (form.role === "In-charge") {
+      const { data: { session: adminSession } } = await supabase.auth.getSession();
+      const { data, error } = await supabase.auth.signUp({
+        email: form.email,
+        password: form.password,
+        options: { data: { role: "In-charge", name: form.name, wards: form.wards } }
       });
+      if (adminSession) await supabase.auth.setSession({ access_token: adminSession.access_token, refresh_token: adminSession.refresh_token });
+      if (error) {
+        const msg = error.message?.toLowerCase() || "";
+        if (msg.includes("already registered") || msg.includes("already exists") || msg.includes("user already")) {
+          showToast("Email already exists in Auth — delete the user from Supabase Auth first");
+        } else {
+          showToast("Error: " + error.message);
+        }
+        return;
+      }
+      // Supabase silently returns existing user without error — detect by checking identities
+      if (!data.user?.identities || data.user.identities.length === 0) {
+        showToast("Email already exists in Auth — delete the user from Supabase Auth first");
+        return;
+      }
+      await supabase.from("incharges").insert([{ name: form.name, email: form.email, phone: form.phone, wards: form.wards, auth_id: data.user?.id }]);
+      showToast(`In-charge ${form.name} registered successfully`);
+    } else {
+      const { id, role, ward, ...memberData } = form;
+      supabase.from('members').insert([memberData]).select().single()
+        .then(({ data, error }) => {
+          if (error) throw error;
+          setMembers((p) => [...p, data]);
+          showToast(`${data.name} registered`);
+        })
+        .catch(err => { console.error(err); showToast("Error registering member"); });
+    }
   }
 
   function handleBulkAssign(list) {
@@ -1190,11 +1679,14 @@ function MainApp({ user, onLogout }) {
 
   const NAV = user.role === "Member" ? [
     { id: "memberDashboard", label: "My Rotations", icon: <svg width="16" height="16" fill="none" stroke="currentColor" strokeWidth="2.5" viewBox="0 0 24 24"><rect x="3" y="3" width="18" height="18" rx="2" /><path d="M9 3v18M15 3v18M3 9h18M3 15h18" /></svg> }
+  ] : user.role === "In-charge" ? [
+    { id: "inCharge", label: "My Ward", icon: <svg width="15" height="15" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z" /><polyline points="9 22 9 12 15 12 15 22" /></svg> }
   ] : [
     { id: "dashboard", label: "Dashboard" },
     { id: "register", label: "Register" },
     { id: "assign", label: "Assign wards" },
     { id: "members", label: "Members" },
+    { id: "incharges", label: "In-charges" },
     { id: "rotations", label: "Rotations" },
   ];
 
@@ -1248,11 +1740,13 @@ function MainApp({ user, onLogout }) {
           else setAssignTargetIds([ids]);
           setTab("assign"); 
         }} />}
-        {tab === "register" && <RegisterTab onRegister={handleRegister} />}
+        {tab === "register" && <RegisterTab onRegister={handleRegister} adminMode={true} />}
         {tab === "assign" && <AssignTab members={members} assignments={assignments} onBulkAssign={handleBulkAssign} initialTargetIds={assignTargetIds} />}
         {tab === "members" && <MembersTab members={members} assignments={assignments} />}
+        {tab === "incharges" && <InchargesTab />}
         {tab === "rotations" && <RotationsTab members={members} assignments={assignments} onEditAssignment={handleEditAssignment} />}
         {tab === "memberDashboard" && <MemberDashboardTab user={user} members={members} assignments={assignments} />}
+        {tab === "inCharge" && <InChargeTab user={user} members={members} assignments={assignments} />}
       </main>
       {/* Logout confirm modal */}
       {showLogoutConfirm && (
@@ -1287,14 +1781,14 @@ export default function App() {
   useEffect(() => {
     supabase.auth.getSession().then(({ data: { session } }) => {
       if (session?.user) {
-        setUser({ id: session.user.id, name: session.user.user_metadata.name, email: session.user.email, role: session.user.user_metadata.role });
+        setUser({ id: session.user.id, name: session.user.user_metadata.name, email: session.user.email, role: session.user.user_metadata.role, wards: session.user.user_metadata.wards || [] });
       }
       setLoading(false);
     });
 
     const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
       if (session?.user) {
-        setUser({ id: session.user.id, name: session.user.user_metadata.name, email: session.user.email, role: session.user.user_metadata.role });
+        setUser({ id: session.user.id, name: session.user.user_metadata.name, email: session.user.email, role: session.user.user_metadata.role, wards: session.user.user_metadata.wards || [] });
       } else {
         setUser(null);
       }
