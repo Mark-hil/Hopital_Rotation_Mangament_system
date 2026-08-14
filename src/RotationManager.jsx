@@ -373,6 +373,26 @@ function RegFormField({ id, label, type, placeholder, value, onChange, error }) 
   );
 }
 
+function PasswordField({ value, onChange, showPw, onToggle, error }) {
+  const inputStyle = { ...INP, padding: "11px 14px", paddingRight: 44, borderColor: error ? "#FCA5A5" : "#E2E8F0", background: "#F8FAFC" };
+  return (
+    <div style={{ marginBottom: 18 }}>
+      <label style={{ display: "block", fontSize: 11, fontWeight: 700, color: "#64748B", marginBottom: 6, letterSpacing: "0.05em", textTransform: "uppercase" }}>Password</label>
+      <div style={{ position: "relative" }}>
+        <input style={inputStyle} type={showPw ? "text" : "password"} placeholder="••••••••" value={value} onChange={onChange}
+          onFocus={e => { e.target.style.background = "#fff"; e.target.style.borderColor = "#6366F1"; e.target.style.boxShadow = "0 0 0 3px rgba(99,102,241,0.1)"; }}
+          onBlur={e => { e.target.style.background = "#F8FAFC"; e.target.style.borderColor = error ? "#FCA5A5" : "#E2E8F0"; e.target.style.boxShadow = "none"; }} />
+        <button type="button" onClick={onToggle} style={{ position: "absolute", right: 10, top: "50%", transform: "translateY(-50%)", background: "none", border: "none", cursor: "pointer", color: "#94A3B8", padding: 4, display: "flex" }}>
+          {showPw
+            ? <svg width="15" height="15" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"/><line x1="1" y1="1" x2="23" y2="23"/></svg>
+            : <svg width="15" height="15" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>}
+        </button>
+      </div>
+      {error && <p style={{ fontSize: 12, color: "#EF4444", fontWeight: 600, marginTop: 5, display: "flex", alignItems: "center", gap: 4 }}><span>{"⚠️"}</span>{error}</p>}
+    </div>
+  );
+}
+
 function RegisterTab({ onRegister, adminMode = false }) {
   const [role, setRole] = useState("Member");
   const [form, setForm] = useState({ name: "", email: "", password: "", phone: "", school: "", group: "nursing", wards: [] });
@@ -404,23 +424,7 @@ function RegisterTab({ onRegister, adminMode = false }) {
     setForm(f => ({ ...f, wards: allSelected ? [] : allWardNames }));
   }
 
-  const pwInputStyle = { ...INP, padding: "11px 14px", paddingRight: 44, borderColor: errors.password ? "#FCA5A5" : "#E2E8F0", background: "#F8FAFC" };
-  const pwFocus = e => { e.target.style.background = "#fff"; e.target.style.borderColor = "#6366F1"; e.target.style.boxShadow = "0 0 0 3px rgba(99,102,241,0.1)"; };
-  const pwBlur = e => { e.target.style.background = "#F8FAFC"; e.target.style.borderColor = errors.password ? "#FCA5A5" : "#E2E8F0"; e.target.style.boxShadow = "none"; };
-  const EyeIcon = () => showPw
-    ? <svg width="15" height="15" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"/><line x1="1" y1="1" x2="23" y2="23"/></svg>
-    : <svg width="15" height="15" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>;
 
-  const PasswordField = () => (
-    <div style={{ marginBottom: 18 }}>
-      <label style={{ display: "block", fontSize: 11, fontWeight: 700, color: "#64748B", marginBottom: 6, letterSpacing: "0.05em", textTransform: "uppercase" }}>Password</label>
-      <div style={{ position: "relative" }}>
-        <input style={pwInputStyle} type={showPw ? "text" : "password"} placeholder="••••••••" value={form.password} onChange={set("password")} onFocus={pwFocus} onBlur={pwBlur} />
-        <button type="button" onClick={() => setShowPw(s => !s)} style={{ position: "absolute", right: 10, top: "50%", transform: "translateY(-50%)", background: "none", border: "none", cursor: "pointer", color: "#94A3B8", padding: 4, display: "flex" }}><EyeIcon /></button>
-      </div>
-      {errors.password && <p style={{ fontSize: 12, color: "#EF4444", fontWeight: 600, marginTop: 5, display: "flex", alignItems: "center", gap: 4 }}><span>{"⚠️"}</span>{errors.password}</p>}
-    </div>
-  );
 
   return (
     <div style={{ maxWidth: isIncharge ? 860 : 560, margin: "0 auto" }}>
@@ -463,7 +467,7 @@ function RegisterTab({ onRegister, adminMode = false }) {
             <RegFormField id="name" label="Full name" placeholder="e.g. Abena Mensah" value={form.name} onChange={set("name")} error={errors.name} />
             <RegFormField id="email" label="Email address" type="email" placeholder="e.g. abena@hospital.com" value={form.email} onChange={set("email")} error={errors.email} />
             <RegFormField id="phone" label="Phone number" type="tel" placeholder="e.g. 0244 000 000" value={form.phone} onChange={set("phone")} error={errors.phone} />
-            <PasswordField />
+            <PasswordField value={form.password} onChange={set("password")} showPw={showPw} onToggle={() => setShowPw(s => !s)} error={errors.password} />
             <button onClick={submit} style={{ width: "100%", padding: "13px", background: "linear-gradient(135deg,#6366F1,#8B5CF6)", color: "#fff", border: "none", borderRadius: 10, fontSize: 14, fontWeight: 700, cursor: "pointer", boxShadow: "0 4px 14px rgba(99,102,241,0.3)", marginTop: 8, transition: "all 0.2s" }} onMouseEnter={e => e.currentTarget.style.transform = "translateY(-1px)"} onMouseLeave={e => e.currentTarget.style.transform = "translateY(0)"}>
               Create in-charge account →
             </button>
@@ -538,7 +542,7 @@ function RegisterTab({ onRegister, adminMode = false }) {
           <RegFormField id="name" label="Full name" placeholder="e.g. Abena Mensah" value={form.name} onChange={set("name")} error={errors.name} />
           <RegFormField id="email" label="Email address" type="email" placeholder="e.g. abena@rota.com" value={form.email} onChange={set("email")} error={errors.email} />
           <RegFormField id="phone" label="Phone number" type="tel" placeholder="e.g. 0244 000 000" value={form.phone} onChange={set("phone")} error={errors.phone} />
-          <PasswordField />
+          <PasswordField value={form.password} onChange={set("password")} showPw={showPw} onToggle={() => setShowPw(s => !s)} error={errors.password} />
           <RegFormField id="school" label="Training institution" placeholder="e.g. Korle Bu School of Nursing" value={form.school} onChange={set("school")} error={errors.school} />
           <div style={{ marginBottom: 28 }}>
             <label style={{ display: "block", fontSize: 11, fontWeight: 700, color: "#64748B", marginBottom: 10, letterSpacing: "0.05em", textTransform: "uppercase" }}>GROUP</label>
