@@ -1153,7 +1153,7 @@ const NAV_ICONS = {
 // ─── Login screen ─────────────────────────────────────────────────────────────
 // Demo auth only — swap handleLogin for a real API call when wiring up a backend.
 
-function LoginScreen({ onGoRegister }) {
+function LoginScreen({ onGoRegister, onGoForgotPassword }) {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
@@ -1196,7 +1196,18 @@ function LoginScreen({ onGoRegister }) {
           </div>
 
           <div style={{ marginBottom: 6 }}>
-            <label style={LS}>PASSWORD</label>
+            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 6 }}>
+              <label style={{ ...LS, marginBottom: 0 }}>PASSWORD</label>
+              {onGoForgotPassword && (
+                <button
+                  type="button"
+                  onClick={onGoForgotPassword}
+                  style={{ background: "none", border: "none", color: "#6366F1", fontSize: 12, fontWeight: 600, cursor: "pointer", padding: 0 }}
+                >
+                  Forgot password?
+                </button>
+              )}
+            </div>
             <div style={{ position: "relative" }}>
               <input
                 type={showPw ? "text" : "password"} value={password}
@@ -1233,6 +1244,232 @@ function LoginScreen({ onGoRegister }) {
                 Create one now
               </button>
             </div>
+          )}
+        </div>
+      </div>
+    </div>
+  );
+}
+
+// ─── Forgot Password Screen ──────────────────────────────────────────────────
+
+function ForgotPasswordScreen({ onBackToLogin }) {
+  const [email, setEmail] = useState("");
+  const [loading, setLoading] = useState(false);
+  const [submitted, setSubmitted] = useState(false);
+  const [error, setError] = useState("");
+
+  async function handleResetPassword() {
+    setError("");
+    if (!email.trim()) {
+      setError("Please enter your email address.");
+      return;
+    }
+    setLoading(true);
+    const { error: err } = await supabase.auth.resetPasswordForEmail(email.trim(), {
+      redirectTo: `${window.location.origin}/`,
+    });
+    setLoading(false);
+    if (err) {
+      setError(err.message || "Unable to send reset email. Please try again.");
+    } else {
+      setSubmitted(true);
+    }
+  }
+
+  return (
+    <div style={{ minHeight: "100vh", background: "#0F172A", display: "flex", alignItems: "center", justifyContent: "center", fontFamily: "'Inter', system-ui, sans-serif", padding: 20 }}>
+      <div style={{ width: "100%", maxWidth: 400 }}>
+        <div style={{ display: "flex", flexDirection: "column", alignItems: "center", marginBottom: 28 }}>
+          <div style={{ width: 52, height: 52, background: "#6366F1", borderRadius: 14, display: "flex", alignItems: "center", justifyContent: "center", marginBottom: 16, boxShadow: "0 8px 24px rgba(99,102,241,0.35)" }}>
+            <svg width="26" height="26" fill="none" stroke="white" strokeWidth="2.3" viewBox="0 0 24 24"><path d="M22 12h-4l-3 9L9 3l-3 9H2" /></svg>
+          </div>
+          <div style={{ fontSize: 19, fontWeight: 700, color: "#fff" }}>RotaManager</div>
+          <div style={{ fontSize: 12, color: "rgba(255,255,255,0.4)", marginTop: 3 }}>2023 / 2024 rotation system</div>
+        </div>
+
+        <div className="premium-card" style={{ borderRadius: 20, padding: "32px 28px", boxShadow: "0 24px 60px rgba(0,0,0,0.35) !important" }}>
+          {submitted ? (
+            <div style={{ textAlign: "center" }}>
+              <div style={{ width: 56, height: 56, background: "#ECFDF5", borderRadius: "50%", display: "flex", alignItems: "center", justifyContent: "center", margin: "0 auto 18px", color: "#10B981" }}>
+                <svg width="28" height="28" fill="none" stroke="currentColor" strokeWidth="2.5" viewBox="0 0 24 24">
+                  <path d="M20 6L9 17l-5-5" strokeLinecap="round" strokeLinejoin="round" />
+                </svg>
+              </div>
+              <div style={{ fontSize: 18, fontWeight: 700, color: "#0F172A", marginBottom: 8 }}>Check your email</div>
+              <p style={{ fontSize: 13, color: "#64748B", lineHeight: 1.6, marginBottom: 24 }}>
+                We've sent a password reset link to <strong style={{ color: "#0F172A" }}>{email}</strong>. Open the link to create your new password.
+              </p>
+              <button
+                onClick={onBackToLogin}
+                style={{ width: "100%", padding: "12px", background: "linear-gradient(135deg,#6366F1,#8B5CF6)", color: "#fff", border: "none", borderRadius: 10, fontSize: 14, fontWeight: 700, cursor: "pointer", boxShadow: "0 4px 16px rgba(99,102,241,0.35)" }}
+              >
+                Back to sign in
+              </button>
+              <div style={{ marginTop: 18, fontSize: 13, color: "#94A3B8" }}>
+                Didn't receive the email?{" "}
+                <button
+                  onClick={handleResetPassword}
+                  disabled={loading}
+                  style={{ background: "none", border: "none", color: "#6366F1", fontWeight: 700, cursor: loading ? "default" : "pointer", padding: 0 }}
+                >
+                  {loading ? "Sending..." : "Click to resend"}
+                </button>
+              </div>
+            </div>
+          ) : (
+            <>
+              <div style={{ fontSize: 18, fontWeight: 700, color: "#0F172A", marginBottom: 4 }}>Reset password</div>
+              <p style={{ fontSize: 13, color: "#64748B", marginBottom: 24 }}>Enter your account email to receive a password reset link.</p>
+
+              <div style={{ marginBottom: 16 }}>
+                <label style={LS}>EMAIL ADDRESS</label>
+                <input
+                  type="email"
+                  autoFocus
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                  onKeyDown={(e) => e.key === "Enter" && handleResetPassword()}
+                  placeholder="name@hospital.com"
+                  style={{ ...INP, borderColor: error ? "#FCA5A5" : "#E2E8F0" }}
+                />
+              </div>
+
+              {error && (
+                <div style={{ display: "flex", alignItems: "center", gap: 6, marginTop: 12, padding: "9px 12px", background: "#FFF1F2", borderRadius: 8, fontSize: 12, color: "#BE123C", fontWeight: 600 }}>
+                  <svg width="14" height="14" fill="none" stroke="currentColor" strokeWidth="2.5" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10" /><line x1="12" y1="8" x2="12" y2="12" /><line x1="12" y1="16" x2="12.01" y2="16" /></svg>
+                  {error}
+                </div>
+              )}
+
+              <button
+                onClick={handleResetPassword}
+                disabled={loading}
+                style={{ width: "100%", padding: "12px", marginTop: 20, background: loading ? "#A5A5F0" : "linear-gradient(135deg,#6366F1,#8B5CF6)", color: "#fff", border: "none", borderRadius: 10, fontSize: 14, fontWeight: 700, cursor: loading ? "default" : "pointer", display: "flex", alignItems: "center", justifyContent: "center", gap: 8, boxShadow: loading ? "none" : "0 4px 16px rgba(99,102,241,0.35)" }}
+              >
+                {loading ? "Sending link…" : "Send reset link →"}
+              </button>
+
+              <button
+                onClick={onBackToLogin}
+                style={{ background: "none", border: "none", color: "#64748B", fontSize: 13, fontWeight: 600, cursor: "pointer", marginTop: 22, padding: 0, display: "flex", alignItems: "center", justifyContent: "center", gap: 6, width: "100%" }}
+              >
+                <svg width="14" height="14" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path d="M19 12H5M12 19l-7-7 7-7" /></svg>
+                Back to sign in
+              </button>
+            </>
+          )}
+        </div>
+      </div>
+    </div>
+  );
+}
+
+// ─── Reset Password Screen ───────────────────────────────────────────────────
+
+function ResetPasswordScreen({ onSuccess, onCancel }) {
+  const [password, setPassword] = useState("");
+  const [confirmPassword, setConfirmPassword] = useState("");
+  const [showPw, setShowPw] = useState(false);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState("");
+
+  async function handleUpdatePassword() {
+    setError("");
+    if (!password.trim()) {
+      setError("Please enter a new password.");
+      return;
+    }
+    if (password.length < 6) {
+      setError("Password must be at least 6 characters.");
+      return;
+    }
+    if (password !== confirmPassword) {
+      setError("Passwords do not match.");
+      return;
+    }
+
+    setLoading(true);
+    const { error: err } = await supabase.auth.updateUser({ password });
+    setLoading(false);
+    if (err) {
+      setError(err.message || "Failed to update password. Link may have expired.");
+    } else {
+      onSuccess();
+    }
+  }
+
+  return (
+    <div style={{ minHeight: "100vh", background: "#0F172A", display: "flex", alignItems: "center", justifyContent: "center", fontFamily: "'Inter', system-ui, sans-serif", padding: 20 }}>
+      <div style={{ width: "100%", maxWidth: 400 }}>
+        <div style={{ display: "flex", flexDirection: "column", alignItems: "center", marginBottom: 28 }}>
+          <div style={{ width: 52, height: 52, background: "#6366F1", borderRadius: 14, display: "flex", alignItems: "center", justifyContent: "center", marginBottom: 16, boxShadow: "0 8px 24px rgba(99,102,241,0.35)" }}>
+            <svg width="26" height="26" fill="none" stroke="white" strokeWidth="2.3" viewBox="0 0 24 24"><path d="M22 12h-4l-3 9L9 3l-3 9H2" /></svg>
+          </div>
+          <div style={{ fontSize: 19, fontWeight: 700, color: "#fff" }}>RotaManager</div>
+          <div style={{ fontSize: 12, color: "rgba(255,255,255,0.4)", marginTop: 3 }}>2023 / 2024 rotation system</div>
+        </div>
+
+        <div className="premium-card" style={{ borderRadius: 20, padding: "32px 28px", boxShadow: "0 24px 60px rgba(0,0,0,0.35) !important" }}>
+          <div style={{ fontSize: 18, fontWeight: 700, color: "#0F172A", marginBottom: 4 }}>Set new password</div>
+          <p style={{ fontSize: 13, color: "#64748B", marginBottom: 24 }}>Enter your new password below.</p>
+
+          <div style={{ marginBottom: 16 }}>
+            <label style={LS}>NEW PASSWORD</label>
+            <div style={{ position: "relative" }}>
+              <input
+                type={showPw ? "text" : "password"}
+                autoFocus
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                onKeyDown={(e) => e.key === "Enter" && handleUpdatePassword()}
+                placeholder="At least 6 characters"
+                style={{ ...INP, borderColor: error ? "#FCA5A5" : "#E2E8F0", paddingRight: 44 }}
+              />
+              <button type="button" onClick={() => setShowPw(s => !s)} style={{ position: "absolute", right: 10, top: "50%", transform: "translateY(-50%)", background: "none", border: "none", cursor: "pointer", color: "#94A3B8", padding: 4, display: "flex" }}>
+                {showPw ? (
+                  <svg width="16" height="16" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24" /><line x1="1" y1="1" x2="23" y2="23" /></svg>
+                ) : (
+                  <svg width="16" height="16" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z" /><circle cx="12" cy="12" r="3" /></svg>
+                )}
+              </button>
+            </div>
+          </div>
+
+          <div style={{ marginBottom: 6 }}>
+            <label style={LS}>CONFIRM NEW PASSWORD</label>
+            <input
+              type={showPw ? "text" : "password"}
+              value={confirmPassword}
+              onChange={(e) => setConfirmPassword(e.target.value)}
+              onKeyDown={(e) => e.key === "Enter" && handleUpdatePassword()}
+              placeholder="Repeat new password"
+              style={{ ...INP, borderColor: error ? "#FCA5A5" : "#E2E8F0" }}
+            />
+          </div>
+
+          {error && (
+            <div style={{ display: "flex", alignItems: "center", gap: 6, marginTop: 12, padding: "9px 12px", background: "#FFF1F2", borderRadius: 8, fontSize: 12, color: "#BE123C", fontWeight: 600 }}>
+              <svg width="14" height="14" fill="none" stroke="currentColor" strokeWidth="2.5" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10" /><line x1="12" y1="8" x2="12" y2="12" /><line x1="12" y1="16" x2="12.01" y2="16" /></svg>
+              {error}
+            </div>
+          )}
+
+          <button
+            onClick={handleUpdatePassword}
+            disabled={loading}
+            style={{ width: "100%", padding: "12px", marginTop: 20, background: loading ? "#A5A5F0" : "linear-gradient(135deg,#6366F1,#8B5CF6)", color: "#fff", border: "none", borderRadius: 10, fontSize: 14, fontWeight: 700, cursor: loading ? "default" : "pointer", display: "flex", alignItems: "center", justifyContent: "center", gap: 8, boxShadow: loading ? "none" : "0 4px 16px rgba(99,102,241,0.35)" }}
+          >
+            {loading ? "Updating password…" : "Update password →"}
+          </button>
+
+          {onCancel && (
+            <button
+              onClick={onCancel}
+              style={{ background: "none", border: "none", color: "#64748B", fontSize: 13, fontWeight: 600, cursor: "pointer", marginTop: 22, padding: 0, display: "flex", alignItems: "center", justifyContent: "center", gap: 6, width: "100%" }}
+            >
+              Cancel
+            </button>
           )}
         </div>
       </div>
@@ -1579,8 +1816,29 @@ function MainApp({ user, onLogout }) {
   const [assignments, setAssignments] = useState([]);
   const [toast, setToast] = useState("");
   const [showLogoutConfirm, setShowLogoutConfirm] = useState(false);
+  const [showChangePassword, setShowChangePassword] = useState(false);
+  const [changePwForm, setChangePwForm] = useState({ password: "", confirmPassword: "", show: false });
+  const [changePwLoading, setChangePwLoading] = useState(false);
+  const [changePwError, setChangePwError] = useState("");
 
   function showToast(msg) { setToast(msg); setTimeout(() => setToast(""), 3000); }
+
+  async function handleChangePassword() {
+    setChangePwError("");
+    if (!changePwForm.password.trim()) { setChangePwError("Enter a new password."); return; }
+    if (changePwForm.password.length < 6) { setChangePwError("Password must be at least 6 characters."); return; }
+    if (changePwForm.password !== changePwForm.confirmPassword) { setChangePwError("Passwords do not match."); return; }
+    setChangePwLoading(true);
+    const { error } = await supabase.auth.updateUser({ password: changePwForm.password });
+    setChangePwLoading(false);
+    if (error) {
+      setChangePwError(error.message || "Failed to update password.");
+    } else {
+      showToast("Password updated successfully!");
+      setShowChangePassword(false);
+      setChangePwForm({ password: "", confirmPassword: "", show: false });
+    }
+  }
 
   useEffect(() => {
     // Initial fetch
@@ -1723,12 +1981,17 @@ function MainApp({ user, onLogout }) {
           <div style={{ fontSize: 10, color: "rgba(255,255,255,0.25)", padding: "0 4px 10px" }}>{members.length} members · {assignments.length} assignments</div>
           <div style={{ display: "flex", alignItems: "center", gap: 9, padding: "8px", borderRadius: 8, background: "rgba(255,255,255,0.04)" }}>
             <div style={{ width: 30, height: 30, borderRadius: "50%", background: "#6366F1", color: "#fff", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 12, fontWeight: 700, flexShrink: 0 }}>
-              {user.name.split(" ").map((w) => w[0]).join("").slice(0, 2).toUpperCase()}
+              {(user?.name || user?.email || "User").split(" ").map((w) => w[0]).join("").slice(0, 2).toUpperCase()}
             </div>
             <div style={{ flex: 1, minWidth: 0 }}>
-              <div style={{ fontSize: 12, fontWeight: 600, color: "#fff", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{user.name}</div>
-              <div style={{ fontSize: 10, color: "rgba(255,255,255,0.35)" }}>{user.role}</div>
+              <div style={{ fontSize: 12, fontWeight: 600, color: "#fff", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{user?.name || user?.email || "User"}</div>
+              <div style={{ fontSize: 10, color: "rgba(255,255,255,0.35)" }}>{user?.role || "Member"}</div>
             </div>
+            <button onClick={() => { setChangePwError(""); setChangePwForm({ password: "", confirmPassword: "", show: false }); setShowChangePassword(true); }} title="Change password" style={{ background: "none", border: "none", cursor: "pointer", color: "rgba(255,255,255,0.35)", padding: 6, display: "flex", alignItems: "center", justifyContent: "center", borderRadius: 6, flexShrink: 0, transition: "all .15s" }}
+              onMouseEnter={(e) => { e.currentTarget.style.color = "#818CF8"; e.currentTarget.style.background = "rgba(99,102,241,0.12)"; }}
+              onMouseLeave={(e) => { e.currentTarget.style.color = "rgba(255,255,255,0.35)"; e.currentTarget.style.background = "none"; }}>
+              <svg width="15" height="15" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><rect x="3" y="11" width="18" height="11" rx="2" ry="2" /><path d="M7 11V7a5 5 0 0 1 10 0v4" /></svg>
+            </button>
             <button onClick={() => setShowLogoutConfirm(true)} title="Sign out" style={{ background: "none", border: "none", cursor: "pointer", color: "rgba(255,255,255,0.35)", padding: 6, display: "flex", alignItems: "center", justifyContent: "center", borderRadius: 6, flexShrink: 0, transition: "all .15s" }}
               onMouseEnter={(e) => { e.currentTarget.style.color = "#F87171"; e.currentTarget.style.background = "rgba(248,113,113,0.12)"; }}
               onMouseLeave={(e) => { e.currentTarget.style.color = "rgba(255,255,255,0.35)"; e.currentTarget.style.background = "none"; }}>
@@ -1769,6 +2032,75 @@ function MainApp({ user, onLogout }) {
         </div>
       )}
 
+      {/* In-App Change Password Modal */}
+      {showChangePassword && (
+        <div style={{ position: "fixed", inset: 0, background: "rgba(15,23,42,0.6)", backdropFilter: "blur(4px)", display: "flex", alignItems: "center", justifyContent: "center", zIndex: 200, padding: 20 }}>
+          <div className="premium-card" style={{ padding: "28px 28px", maxWidth: 380, width: "100%", borderRadius: 16, boxShadow: "0 20px 60px rgba(0,0,0,0.25) !important" }}>
+            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 16 }}>
+              <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+                <div style={{ width: 36, height: 36, background: "#EEF2FF", borderRadius: 10, display: "flex", alignItems: "center", justifyContent: "center", color: "#6366F1" }}>
+                  <svg width="18" height="18" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><rect x="3" y="11" width="18" height="11" rx="2" ry="2" /><path d="M7 11V7a5 5 0 0 1 10 0v4" /></svg>
+                </div>
+                <div>
+                  <div style={{ fontSize: 16, fontWeight: 700, color: "#0F172A" }}>Change Password</div>
+                  <div style={{ fontSize: 11, color: "#64748B" }}>Update your account password</div>
+                </div>
+              </div>
+              <button onClick={() => setShowChangePassword(false)} style={{ background: "none", border: "none", color: "#94A3B8", cursor: "pointer", padding: 4 }}>
+                <svg width="18" height="18" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><line x1="18" y1="6" x2="6" y2="18" /><line x1="6" y1="6" x2="18" y2="18" /></svg>
+              </button>
+            </div>
+
+            <div style={{ marginBottom: 14 }}>
+              <label style={LS}>NEW PASSWORD</label>
+              <div style={{ position: "relative" }}>
+                <input
+                  type={changePwForm.show ? "text" : "password"}
+                  placeholder="At least 6 characters"
+                  value={changePwForm.password}
+                  onChange={(e) => setChangePwForm(f => ({ ...f, password: e.target.value }))}
+                  onKeyDown={(e) => e.key === "Enter" && handleChangePassword()}
+                  style={{ ...INP, paddingRight: 40 }}
+                />
+                <button type="button" onClick={() => setChangePwForm(f => ({ ...f, show: !f.show }))} style={{ position: "absolute", right: 10, top: "50%", transform: "translateY(-50%)", background: "none", border: "none", cursor: "pointer", color: "#94A3B8" }}>
+                  {changePwForm.show ? (
+                    <svg width="15" height="15" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24" /><line x1="1" y1="1" x2="23" y2="23" /></svg>
+                  ) : (
+                    <svg width="15" height="15" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z" /><circle cx="12" cy="12" r="3" /></svg>
+                  )}
+                </button>
+              </div>
+            </div>
+
+            <div style={{ marginBottom: 16 }}>
+              <label style={LS}>CONFIRM PASSWORD</label>
+              <input
+                type={changePwForm.show ? "text" : "password"}
+                placeholder="Repeat new password"
+                value={changePwForm.confirmPassword}
+                onChange={(e) => setChangePwForm(f => ({ ...f, confirmPassword: e.target.value }))}
+                onKeyDown={(e) => e.key === "Enter" && handleChangePassword()}
+                style={INP}
+              />
+            </div>
+
+            {changePwError && (
+              <div style={{ display: "flex", alignItems: "center", gap: 6, marginBottom: 14, padding: "8px 12px", background: "#FFF1F2", borderRadius: 8, fontSize: 12, color: "#BE123C", fontWeight: 600 }}>
+                <svg width="14" height="14" fill="none" stroke="currentColor" strokeWidth="2.5" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10" /><line x1="12" y1="8" x2="12" y2="12" /><line x1="12" y1="16" x2="12.01" y2="16" /></svg>
+                {changePwError}
+              </div>
+            )}
+
+            <div style={{ display: "flex", gap: 10 }}>
+              <button onClick={() => setShowChangePassword(false)} style={{ flex: 1, padding: "10px", background: "#F8FAFC", color: "#334155", border: "1px solid #E2E8F0", borderRadius: 8, fontSize: 13, fontWeight: 600, cursor: "pointer" }}>Cancel</button>
+              <button onClick={handleChangePassword} disabled={changePwLoading} style={{ flex: 1.3, padding: "10px", background: changePwLoading ? "#A5A5F0" : "linear-gradient(135deg,#6366F1,#8B5CF6)", color: "#fff", border: "none", borderRadius: 8, fontSize: 13, fontWeight: 700, cursor: changePwLoading ? "default" : "pointer" }}>
+                {changePwLoading ? "Saving..." : "Save Password"}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
       <Toast msg={toast} />
     </div>
   );
@@ -1777,34 +2109,103 @@ function MainApp({ user, onLogout }) {
 export default function App() {
   const [user, setUser] = useState(null);
   const [view, setView] = useState("login");
+  const [isRecovery, setIsRecovery] = useState(false);
   const [loading, setLoading] = useState(true);
   const [toast, setToast] = useState("");
 
   function showToast(msg) { setToast(msg); setTimeout(() => setToast(""), 3000); }
 
   useEffect(() => {
+    // Check if arriving via a recovery URL hash or search parameter
+    if (typeof window !== "undefined") {
+      const hash = window.location.hash || "";
+      const search = window.location.search || "";
+      if (hash.includes("type=recovery") || search.includes("type=recovery")) {
+        setIsRecovery(true);
+      }
+      if (hash.includes("error_description=")) {
+        const params = new URLSearchParams(hash.replace(/^#/, ""));
+        const desc = params.get("error_description");
+        if (desc) {
+          showToast(decodeURIComponent(desc.replace(/\+/g, " ")));
+          window.history.replaceState(null, "", window.location.pathname);
+        }
+      }
+    }
+
     supabase.auth.getSession().then(({ data: { session } }) => {
-      if (session?.user) {
-        setUser({ id: session.user.id, name: session.user.user_metadata.name, email: session.user.email, role: session.user.user_metadata.role, wards: session.user.user_metadata.wards || [] });
+      const isRecoveryHash = typeof window !== "undefined" && window.location.hash && window.location.hash.includes("type=recovery");
+      if (session?.user && !isRecovery && !isRecoveryHash) {
+        setUser({
+          id: session.user.id,
+          name: session.user.user_metadata?.name || session.user.email?.split("@")[0] || "User",
+          email: session.user.email,
+          role: session.user.user_metadata?.role || "Member",
+          wards: session.user.user_metadata?.wards || []
+        });
       }
       setLoading(false);
     });
 
-    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
-      if (session?.user) {
-        setUser({ id: session.user.id, name: session.user.user_metadata.name, email: session.user.email, role: session.user.user_metadata.role, wards: session.user.user_metadata.wards || [] });
-      } else {
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
+      if (event === "PASSWORD_RECOVERY") {
+        setIsRecovery(true);
+      } else if (session?.user && !isRecovery && !window.location.hash?.includes("type=recovery")) {
+        setUser({
+          id: session.user.id,
+          name: session.user.user_metadata?.name || session.user.email?.split("@")[0] || "User",
+          email: session.user.email,
+          role: session.user.user_metadata?.role || "Member",
+          wards: session.user.user_metadata?.wards || []
+        });
+      } else if (!session?.user) {
         setUser(null);
       }
     });
 
     return () => subscription.unsubscribe();
-  }, []);
+  }, [isRecovery]);
 
   if (loading) return <div style={{ minHeight: "100vh", background: "#0F172A", display: "flex", alignItems: "center", justifyContent: "center", color: "#fff", fontFamily: "'Inter', sans-serif" }}>Loading session...</div>;
 
+  // If in password recovery mode, render the reset password view
+  if (isRecovery || view === "resetPassword") {
+    return (
+      <>
+        <ResetPasswordScreen
+          onSuccess={async () => {
+            if (typeof window !== "undefined") {
+              window.history.replaceState(null, "", window.location.pathname);
+            }
+            setIsRecovery(false);
+            setView("login");
+            showToast("Password updated successfully! Please sign in with your new password.");
+            await supabase.auth.signOut();
+          }}
+          onCancel={() => {
+            if (typeof window !== "undefined") {
+              window.history.replaceState(null, "", window.location.pathname);
+            }
+            setIsRecovery(false);
+            setView("login");
+          }}
+        />
+        <Toast msg={toast} />
+      </>
+    );
+  }
+
   if (user) {
     return <MainApp user={user} onLogout={() => supabase.auth.signOut()} />;
+  }
+
+  if (view === "forgotPassword") {
+    return (
+      <>
+        <ForgotPasswordScreen onBackToLogin={() => setView("login")} />
+        <Toast msg={toast} />
+      </>
+    );
   }
 
   if (view === "register") {
@@ -1846,7 +2247,10 @@ export default function App() {
 
   return (
     <>
-      <LoginScreen onGoRegister={() => setView("register")} />
+      <LoginScreen
+        onGoRegister={() => setView("register")}
+        onGoForgotPassword={() => setView("forgotPassword")}
+      />
       <Toast msg={toast} />
     </>
   );
