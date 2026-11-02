@@ -243,88 +243,90 @@ export default function WardsTab({ members, assignments, wardRows, tableMissing,
       </div>
 
       {/* Table */}
-      <div className="table-wrapper table-scroll-wrapper" style={{ borderRadius: 16, overflow: "hidden", border: "1px solid #E2E8F0", boxShadow: "0 4px 20px rgba(0,0,0,0.03)", background: "#fff" }}>
+      <div className="table-wrapper" style={{ borderRadius: 16, overflow: "hidden", border: "1px solid #E2E8F0", boxShadow: "0 4px 20px rgba(0,0,0,0.03)", background: "#fff" }}>
         {filtered.length === 0 ? (
           <div style={{ textAlign: "center", padding: 60, color: "#94A3B8" }}>
             <div style={{ fontSize: 40, marginBottom: 12 }}>🏥</div>
             <div style={{ fontSize: 16, fontWeight: 600, color: "#475569" }}>{rows.length ? "No wards match your filters" : "No wards yet"}</div>
           </div>
         ) : (
-          <table className="responsive-table incharges-table">
-            <thead>
-              <tr style={{ background: "#F8FAFC", borderBottom: "1.5px solid #E2E8F0" }}>
-                {["Ward", "Rotation length", "People assigned", "Upcoming", "In-charge", ""].map(h => (
-                  <th key={h} style={{ textAlign: h ? "left" : "right", padding: "14px 18px", fontSize: 11, fontWeight: 700, color: "#64748B", textTransform: "uppercase", letterSpacing: "0.05em" }}>{h}</th>
-                ))}
-              </tr>
-            </thead>
-            <tbody>
-              {paginated.map((r, i) => {
-                const st = stats[r.name];
-                const theme = themeForDept(r.department);
-                const sup = supervisorsFor(r.name);
-                const over = r.capacity && st.current > r.capacity;
-                const pct = r.capacity ? Math.min(100, (st.current / r.capacity) * 100) : null;
-                return (
-                  <tr key={r.id ?? r.name} className="hover-row" style={{ background: i % 2 ? "#FAFAFC" : "#fff", borderBottom: "1px solid #F1F5F9", cursor: "pointer" }} onClick={() => setDetailName(r.name)}>
-                    <td data-label="Ward" style={{ padding: "14px 18px", verticalAlign: "middle" }}>
-                      <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
-                        <div style={{ width: 36, height: 36, borderRadius: 10, background: theme.color, border: `1px solid ${theme.accent}33`, display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
-                          <div style={{ width: 10, height: 10, borderRadius: 3, background: theme.accent }} />
+          <div className="table-scroll-wrapper">
+            <table className="responsive-table wards-table">
+              <thead>
+                <tr style={{ background: "#F8FAFC", borderBottom: "1.5px solid #E2E8F0" }}>
+                  {["Ward", "Rotation length", "People assigned", "Upcoming", "In-charge", ""].map(h => (
+                    <th key={h} style={{ textAlign: h ? "left" : "right", padding: "14px 18px", fontSize: 11, fontWeight: 700, color: "#64748B", textTransform: "uppercase", letterSpacing: "0.05em" }}>{h}</th>
+                  ))}
+                </tr>
+              </thead>
+              <tbody>
+                {paginated.map((r, i) => {
+                  const st = stats[r.name];
+                  const theme = themeForDept(r.department);
+                  const sup = supervisorsFor(r.name);
+                  const over = r.capacity && st.current > r.capacity;
+                  const pct = r.capacity ? Math.min(100, (st.current / r.capacity) * 100) : null;
+                  return (
+                    <tr key={r.id ?? r.name} className="hover-row" style={{ background: i % 2 ? "#FAFAFC" : "#fff", borderBottom: "1px solid #F1F5F9", cursor: "pointer" }} onClick={() => setDetailName(r.name)}>
+                      <td data-label="Ward" style={{ padding: "14px 18px", verticalAlign: "middle" }}>
+                        <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
+                          <div style={{ width: 36, height: 36, borderRadius: 10, background: theme.color, border: `1px solid ${theme.accent}33`, display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
+                            <div style={{ width: 10, height: 10, borderRadius: 3, background: theme.accent }} />
+                          </div>
+                          <div>
+                            <div style={{ fontWeight: 700, color: "#0F172A", fontSize: 14 }}>{r.name}</div>
+                            <div style={{ fontSize: 11, fontWeight: 600, color: theme.textColor, marginTop: 2 }}>{r.department}</div>
+                          </div>
                         </div>
-                        <div>
-                          <div style={{ fontWeight: 700, color: "#0F172A", fontSize: 14 }}>{r.name}</div>
-                          <div style={{ fontSize: 11, fontWeight: 600, color: theme.textColor, marginTop: 2 }}>{r.department}</div>
+                      </td>
+                      <td data-label="Rotation length" style={{ padding: "14px 18px", verticalAlign: "middle" }}>
+                        <div style={{ display: "flex", gap: 6, flexWrap: "wrap" }}>
+                          <span style={{ fontSize: 11, fontWeight: 600, padding: "3px 9px", borderRadius: 99, background: r.nursing_weeks ? "#EEF2FF" : "#F1F5F9", color: r.nursing_weeks ? "#4338CA" : "#94A3B8" }}>N {r.nursing_weeks ? `${r.nursing_weeks}w` : "—"}</span>
+                          <span style={{ fontSize: 11, fontWeight: 600, padding: "3px 9px", borderRadius: 99, background: r.midwifery_weeks ? "#F0FDF4" : "#F1F5F9", color: r.midwifery_weeks ? "#166534" : "#94A3B8" }}>M {r.midwifery_weeks ? `${r.midwifery_weeks}w` : "—"}</span>
                         </div>
-                      </div>
-                    </td>
-                    <td data-label="Rotation length" style={{ padding: "14px 18px", verticalAlign: "middle" }}>
-                      <div style={{ display: "flex", gap: 6, flexWrap: "wrap" }}>
-                        <span style={{ fontSize: 11, fontWeight: 600, padding: "3px 9px", borderRadius: 99, background: r.nursing_weeks ? "#EEF2FF" : "#F1F5F9", color: r.nursing_weeks ? "#4338CA" : "#94A3B8" }}>N {r.nursing_weeks ? `${r.nursing_weeks}w` : "—"}</span>
-                        <span style={{ fontSize: 11, fontWeight: 600, padding: "3px 9px", borderRadius: 99, background: r.midwifery_weeks ? "#F0FDF4" : "#F1F5F9", color: r.midwifery_weeks ? "#166534" : "#94A3B8" }}>M {r.midwifery_weeks ? `${r.midwifery_weeks}w` : "—"}</span>
-                      </div>
-                    </td>
-                    <td data-label="People assigned" style={{ padding: "14px 18px", verticalAlign: "middle", minWidth: 170 }}>
-                      <div style={{ display: "flex", alignItems: "baseline", gap: 6 }}>
-                        <span style={{ fontSize: 20, fontWeight: 800, color: over ? "#E11D48" : st.current ? "#0F172A" : "#CBD5E1" }}>{st.current}</span>
-                        {r.capacity && <span style={{ fontSize: 12, color: "#94A3B8", fontWeight: 600 }}>/ {r.capacity}</span>}
-                        {st.current > 0 && <span style={{ fontSize: 11, color: "#64748B" }}>{st.nursing}N · {st.midwifery}M</span>}
-                      </div>
-                      {pct !== null && (
-                        <div style={{ height: 4, background: "#EEF2F6", borderRadius: 99, marginTop: 6, overflow: "hidden", maxWidth: 140 }}>
-                          <div style={{ width: `${pct}%`, height: "100%", background: over ? "#E11D48" : pct >= 80 ? "#F59E0B" : "#10B981" }} />
+                      </td>
+                      <td data-label="People assigned" style={{ padding: "14px 18px", verticalAlign: "middle", minWidth: 170 }}>
+                        <div style={{ display: "flex", alignItems: "baseline", gap: 6 }}>
+                          <span style={{ fontSize: 20, fontWeight: 800, color: over ? "#E11D48" : st.current ? "#0F172A" : "#CBD5E1" }}>{st.current}</span>
+                          {r.capacity && <span style={{ fontSize: 12, color: "#94A3B8", fontWeight: 600 }}>/ {r.capacity}</span>}
+                          {st.current > 0 && <span style={{ fontSize: 11, color: "#64748B" }}>{st.nursing}N · {st.midwifery}M</span>}
                         </div>
-                      )}
-                    </td>
-                    <td data-label="Upcoming" style={{ padding: "14px 18px", verticalAlign: "middle" }}>
-                      {st.upcoming ? <span style={{ fontSize: 12, fontWeight: 700, color: "#4338CA", background: "#EEF2FF", padding: "3px 10px", borderRadius: 99 }}>+{st.upcoming}</span> : <span style={{ color: "#CBD5E1" }}>—</span>}
-                    </td>
-                    <td data-label="In-charge" style={{ padding: "14px 18px", verticalAlign: "middle", fontSize: 13, minWidth: 160 }}>
-                      {sup.length > 0 ? (
-                        <div style={{ display: "flex", gap: 5, flexWrap: "wrap", alignItems: "center" }}>
-                          {sup.map(s => (
-                            <span key={s.id} style={{ display: "inline-flex", alignItems: "center", gap: 5, padding: "3px 9px", background: "#F1F5F9", color: "#1E293B", borderRadius: 6, fontSize: 12, fontWeight: 600, border: "1px solid #E2E8F0" }}>
-                              <span style={{ width: 6, height: 6, borderRadius: "50%", background: "#6366F1" }} />
-                              {s.name}
-                            </span>
-                          ))}
+                        {pct !== null && (
+                          <div style={{ height: 4, background: "#EEF2F6", borderRadius: 99, marginTop: 6, overflow: "hidden", maxWidth: 140 }}>
+                            <div style={{ width: `${pct}%`, height: "100%", background: over ? "#E11D48" : pct >= 80 ? "#F59E0B" : "#10B981" }} />
+                          </div>
+                        )}
+                      </td>
+                      <td data-label="Upcoming" style={{ padding: "14px 18px", verticalAlign: "middle" }}>
+                        {st.upcoming ? <span style={{ fontSize: 12, fontWeight: 700, color: "#4338CA", background: "#EEF2FF", padding: "3px 10px", borderRadius: 99 }}>+{st.upcoming}</span> : <span style={{ color: "#CBD5E1" }}>—</span>}
+                      </td>
+                      <td data-label="In-charge" style={{ padding: "14px 18px", verticalAlign: "middle", fontSize: 13, minWidth: 160 }}>
+                        {sup.length > 0 ? (
+                          <div style={{ display: "flex", gap: 5, flexWrap: "wrap", alignItems: "center" }}>
+                            {sup.map(s => (
+                              <span key={s.id} style={{ display: "inline-flex", alignItems: "center", gap: 5, padding: "3px 9px", background: "#F1F5F9", color: "#1E293B", borderRadius: 6, fontSize: 12, fontWeight: 600, border: "1px solid #E2E8F0" }}>
+                                <span style={{ width: 6, height: 6, borderRadius: "50%", background: "#6366F1" }} />
+                                {s.name}
+                              </span>
+                            ))}
+                          </div>
+                        ) : (
+                          <span style={{ fontSize: 11, fontWeight: 700, color: "#B45309", background: "#FFFBEB", border: "1px solid #FDE68A", padding: "3px 9px", borderRadius: 99 }}>None</span>
+                        )}
+                      </td>
+                      <td style={{ padding: "14px 18px", verticalAlign: "middle", textAlign: "right" }} onClick={e => e.stopPropagation()}>
+                        <div style={{ display: "inline-flex", gap: 8 }}>
+                          <button type="button" className="action-btn-secondary" onClick={() => setDetailName(r.name)}>People</button>
+                          <button type="button" className="action-btn-secondary" disabled={!canEditWards} style={{ opacity: canEditWards ? 1 : 0.45 }} onClick={() => setFormWard(r)}>Edit</button>
+                          <button type="button" className="action-btn-danger" disabled={!canEditWards} style={{ opacity: canEditWards ? 1 : 0.45 }} onClick={() => setDeleting(r)}>Delete</button>
                         </div>
-                      ) : (
-                        <span style={{ fontSize: 11, fontWeight: 700, color: "#B45309", background: "#FFFBEB", border: "1px solid #FDE68A", padding: "3px 9px", borderRadius: 99 }}>None</span>
-                      )}
-                    </td>
-                    <td style={{ padding: "14px 18px", verticalAlign: "middle", textAlign: "right" }} onClick={e => e.stopPropagation()}>
-                      <div style={{ display: "inline-flex", gap: 8 }}>
-                        <button type="button" className="action-btn-secondary" onClick={() => setDetailName(r.name)}>People</button>
-                        <button type="button" className="action-btn-secondary" disabled={!canEditWards} style={{ opacity: canEditWards ? 1 : 0.45 }} onClick={() => setFormWard(r)}>Edit</button>
-                        <button type="button" className="action-btn-danger" disabled={!canEditWards} style={{ opacity: canEditWards ? 1 : 0.45 }} onClick={() => setDeleting(r)}>Delete</button>
-                      </div>
-                    </td>
-                  </tr>
-                );
-              })}
-            </tbody>
-          </table>
+                      </td>
+                    </tr>
+                  );
+                })}
+              </tbody>
+            </table>
+          </div>
         )}
         {filtered.length > 0 && (
           <Pagination currentPage={page} totalItems={filtered.length} itemsPerPage={perPage} onPageChange={setPage} onItemsPerPageChange={setPerPage} itemsPerPageOptions={[5, 10, 20, 50]} itemLabel="wards" />

@@ -391,7 +391,7 @@ export default function InchargesTab({ showToast, onGoRegister }) {
           Loading in-charges...
         </div>
       ) : (
-        <div className="table-wrapper table-scroll-wrapper" style={{ borderRadius: 16, overflow: "hidden", border: "1px solid #E2E8F0", boxShadow: "0 4px 20px rgba(0,0,0,0.03)", background: "#fff" }}>
+        <div className="table-wrapper" style={{ borderRadius: 16, overflow: "hidden", border: "1px solid #E2E8F0", boxShadow: "0 4px 20px rgba(0,0,0,0.03)", background: "#fff" }}>
           {filtered.length === 0 ? (
             <div style={{ textAlign: "center", padding: 60, color: "#94A3B8" }}>
               <div style={{ fontSize: 40, marginBottom: 16 }}>🔍</div>
@@ -410,7 +410,8 @@ export default function InchargesTab({ showToast, onGoRegister }) {
               )}
             </div>
           ) : (
-            <table className="responsive-table incharges-table">
+            <div className="table-scroll-wrapper">
+              <table className="responsive-table incharges-table">
               <thead>
                 <tr style={{ background: "#F8FAFC", borderBottom: "1.5px solid #E2E8F0" }}>
                   <th
@@ -714,9 +715,10 @@ export default function InchargesTab({ showToast, onGoRegister }) {
                 })}
               </tbody>
             </table>
-          )}
+          </div>
+        )}
 
-          {/* Pagination */}
+        {/* Pagination */}
           <Pagination
             currentPage={page}
             totalItems={filtered.length}

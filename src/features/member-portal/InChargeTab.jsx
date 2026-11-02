@@ -166,14 +166,15 @@ export default function InChargeTab({ user, members, assignments }) {
           </div>
         )}
 
-        <div className="table-wrapper table-scroll-wrapper" style={{ borderRadius: 14, overflow: "hidden", border: "1px solid #E2E8F0", background: "#fff" }}>
+        <div className="table-wrapper" style={{ borderRadius: 14, overflow: "hidden", border: "1px solid #E2E8F0", background: "#fff" }}>
           {filtered.length === 0 ? (
             <div style={{ textAlign: "center", padding: "36px 20px", color: "#94A3B8" }}>
               <div style={{ fontSize: 14, fontWeight: 600, color: "#475569" }}>No matching members</div>
               <div style={{ fontSize: 12, marginTop: 4 }}>Try clearing your search query or status filter.</div>
             </div>
           ) : (
-            <table className="responsive-table">
+            <div className="table-scroll-wrapper">
+              <table className="responsive-table">
               <thead>
                 <tr style={{ background: "#F8FAFC", borderBottom: "1px solid #E2E8F0" }}>
                   {headers.map(h => (
@@ -223,9 +224,10 @@ export default function InChargeTab({ user, members, assignments }) {
                 ))}
               </tbody>
             </table>
-          )}
+          </div>
+        )}
 
-          <Pagination
+        <Pagination
             currentPage={page}
             totalItems={filtered.length}
             itemsPerPage={perPage}
