@@ -41,27 +41,53 @@ export function DashboardTab({ members, assignments, wardRows, onNavigateTab, on
   const [dashMode, setDashMode] = useState("operations"); // "operations", "analytics"
   const [showCohortCharts, setShowCohortCharts] = useState(true);
 
-  // In-charges sync for supervisor lookup
-  const [incharges, setIncharges] = useState([]);
+  // In-charges sync for supervisor lookup with offline caching
+  const [incharges, setIncharges] = useState(() => {
+    try {
+      const cached = localStorage.getItem("rotamanager_cache_incharges");
+      return cached ? JSON.parse(cached) : [];
+    } catch {
+      return [];
+    }
+  });
+
   useEffect(() => {
-    supabase
-      .from("incharges")
-      .select("id, name, email, phone, wards")
-      .then(({ data }) => {
-        if (data) setIncharges(data);
-      });
+    const loadIncharges = () => {
+      if (typeof navigator !== "undefined" && !navigator.onLine) {
+        return;
+      }
+      supabase
+        .from("incharges")
+        .select("id, name, email, phone, wards")
+        .then(({ data, error }) => {
+          if (!error && data) {
+            setIncharges(data);
+            try {
+              localStorage.setItem("rotamanager_cache_incharges", JSON.stringify(data));
+            } catch {}
+          }
+        })
+        .catch((err) => {
+          console.warn("Offline or network issue fetching incharges:", err?.message || err);
+        });
+    };
+
+    loadIncharges();
+
+    const handleOnline = () => {
+      loadIncharges();
+    };
+    window.addEventListener("online", handleOnline);
+
     const ch = supabase
       .channel("dashboard_incharges_sync")
       .on("postgres_changes", { event: "*", schema: "public", table: "incharges" }, () => {
-        supabase
-          .from("incharges")
-          .select("id, name, email, phone, wards")
-          .then(({ data }) => {
-            if (data) setIncharges(data);
-          });
+        loadIncharges();
       })
       .subscribe();
+
     return () => {
+      window.removeEventListener("online", handleOnline);
       supabase.removeChannel(ch);
     };
   }, []);
@@ -199,27 +225,10 @@ export function DashboardTab({ members, assignments, wardRows, onNavigateTab, on
   return (
     <div>
       {/* Header & Quick Navigation */}
-      <div
-        style={{
-          display: "flex",
-          justifyContent: "space-between",
-          alignItems: "flex-start",
-          marginBottom: 26,
-          flexWrap: "wrap",
-          gap: 16,
-        }}
-      >
+      <div className="dashboard-header">
         <div>
-          <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
-            <h2
-              style={{
-                fontSize: 26,
-                fontWeight: 800,
-                letterSpacing: "-0.02em",
-                color: "#0F172A",
-                margin: 0,
-              }}
-            >
+          <div style={{ display: "flex", alignItems: "center", gap: 10, flexWrap: "wrap" }}>
+            <h2 className="dashboard-title-text">
               Clinical Rotation Dashboard
             </h2>
             <span
@@ -240,21 +249,13 @@ export function DashboardTab({ members, assignments, wardRows, onNavigateTab, on
               Live Hospital View
             </span>
           </div>
-          <p style={{ fontSize: 14, color: "#64748B", marginTop: 5, maxWidth: 640 }}>
+          <p style={{ fontSize: 13.5, color: "#64748B", marginTop: 5, maxWidth: 640 }}>
             Live command center for hospital ward occupancy, departmental trainee capacity, and individual rotation timelines.
           </p>
         </div>
 
-        <div style={{ display: "flex", gap: 10, alignItems: "center", flexWrap: "wrap" }}>
-          <div
-            style={{
-              display: "inline-flex",
-              padding: 3,
-              background: "#F1F5F9",
-              borderRadius: 10,
-              border: "1px solid #E2E8F0",
-            }}
-          >
+        <div style={{ display: "flex", gap: 10, alignItems: "center", flexWrap: "wrap", width: "100%", maxWidth: "fit-content" }}>
+          <div className="dashboard-mode-toggle">
             <button
               type="button"
               onClick={() => setDashMode("operations")}
@@ -294,7 +295,7 @@ export function DashboardTab({ members, assignments, wardRows, onNavigateTab, on
           </div>
 
           {onNavigateTab && (
-            <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
+            <div className="dashboard-quick-actions">
               <button
                 type="button"
                 onClick={() => onNavigateTab("wards")}
@@ -520,20 +521,7 @@ export function DashboardTab({ members, assignments, wardRows, onNavigateTab, on
 
           {/* Alert banner */}
           {counts.completed > 0 && (
-            <div
-              style={{
-                background: "#FFF1F2",
-                border: "1px solid #FECDD3",
-                borderRadius: 16,
-                padding: "16px 20px",
-                marginBottom: 28,
-                display: "flex",
-                alignItems: "center",
-                gap: 16,
-                boxShadow: "0 4px 12px rgba(244,63,94,0.05)",
-                flexWrap: "wrap",
-              }}
-            >
+            <div className="dashboard-alert-banner">
               <div
                 style={{
                   width: 44,
@@ -549,7 +537,7 @@ export function DashboardTab({ members, assignments, wardRows, onNavigateTab, on
               >
                 🔔
               </div>
-              <div style={{ flex: 1, minWidth: 240 }}>
+              <div style={{ flex: 1, minWidth: 0 }}>
                 <div style={{ fontSize: 14, fontWeight: 700, color: "#BE123C" }}>
                   {counts.completed} member{counts.completed > 1 ? "s" : ""} have completed their placement and need reassignment
                 </div>
@@ -581,16 +569,7 @@ export function DashboardTab({ members, assignments, wardRows, onNavigateTab, on
           )}
 
           {/* Hospital Rotation Analytics & Visualizations Panel */}
-          <div
-            style={{
-              marginBottom: 36,
-              background: "#fff",
-              border: "1px solid #E2E8F0",
-              borderRadius: 18,
-              padding: "22px 24px",
-              boxShadow: "0 4px 20px rgba(0,0,0,0.02)",
-            }}
-          >
+          <div className="dashboard-section-card">
             <div
               style={{
                 display: "flex",
@@ -703,16 +682,7 @@ export function DashboardTab({ members, assignments, wardRows, onNavigateTab, on
           </div>
 
           {/* Ward Clinical Occupancy & Capacity */}
-          <div
-            style={{
-              marginBottom: 36,
-              background: "#fff",
-              border: "1px solid #E2E8F0",
-              borderRadius: 18,
-              padding: "22px 24px",
-              boxShadow: "0 4px 20px rgba(0,0,0,0.02)",
-            }}
-          >
+          <div className="dashboard-section-card">
             <div
               style={{
                 display: "flex",
@@ -771,16 +741,8 @@ export function DashboardTab({ members, assignments, wardRows, onNavigateTab, on
                 </p>
               </div>
 
-              <div style={{ display: "flex", gap: 8, alignItems: "center", flexWrap: "wrap" }}>
-                <div
-                  style={{
-                    display: "inline-flex",
-                    padding: 3,
-                    background: "#F1F5F9",
-                    borderRadius: 10,
-                    border: "1px solid #E2E8F0",
-                  }}
-                >
+              <div style={{ display: "flex", gap: 8, alignItems: "center", flexWrap: "wrap", width: "100%", maxWidth: "fit-content" }}>
+                <div className="dashboard-view-switcher">
                   <button
                     type="button"
                     onClick={() => setWardViewMode("cards")}
@@ -957,8 +919,8 @@ export function DashboardTab({ members, assignments, wardRows, onNavigateTab, on
                     justifyContent: "space-between",
                   }}
                 >
-                  <div style={{ display: "flex", gap: 8, flexWrap: "wrap", alignItems: "center", flex: 1 }}>
-                    <div style={{ position: "relative", minWidth: 200, maxWidth: 260 }}>
+                  <div style={{ display: "flex", gap: 8, flexWrap: "wrap", alignItems: "center", flex: 1, width: "100%" }}>
+                    <div className="dashboard-search-box">
                       <svg
                         width="14"
                         height="14"
@@ -1350,7 +1312,7 @@ export function DashboardTab({ members, assignments, wardRows, onNavigateTab, on
             </div>
           </div>
 
-          {/* Filters & Search */}
+            {/* Filters & Search */}
           <div
             style={{
               display: "flex",
@@ -1361,8 +1323,8 @@ export function DashboardTab({ members, assignments, wardRows, onNavigateTab, on
               justifyContent: "space-between",
             }}
           >
-            <div style={{ display: "flex", gap: 10, flexWrap: "wrap", alignItems: "center", flex: 1 }}>
-              <div style={{ position: "relative", minWidth: 220, maxWidth: 280 }}>
+            <div style={{ display: "flex", gap: 10, flexWrap: "wrap", alignItems: "center", flex: 1, width: "100%" }}>
+              <div className="dashboard-search-box">
                 <svg
                   width="15"
                   height="15"
@@ -1442,6 +1404,10 @@ export function DashboardTab({ members, assignments, wardRows, onNavigateTab, on
             <div style={{ fontSize: 13, color: "#64748B", fontWeight: 600 }}>
               {filtered.length} {filtered.length === 1 ? "member" : "members"}
             </div>
+          </div>
+
+          <div className="table-scroll-hint">
+            ← Scroll horizontally to view full table →
           </div>
 
           {/* Table */}

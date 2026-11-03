@@ -38,13 +38,36 @@ function MainApp({ user, onLogout }) {
   );
   const [assignTargetIds, setAssignTargetIds] = useState([]);
   const [registerInitialRole, setRegisterInitialRole] = useState("Member");
-  const [members, setMembers] = useState([]);
-  const [assignments, setAssignments] = useState([]);
-  const [wardRows, setWardRows] = useState(DEFAULT_WARD_ROWS);
+  const [members, setMembers] = useState(() => {
+    try {
+      const cached = localStorage.getItem("rotamanager_cache_members");
+      return cached ? JSON.parse(cached) : [];
+    } catch {
+      return [];
+    }
+  });
+  const [assignments, setAssignments] = useState(() => {
+    try {
+      const cached = localStorage.getItem("rotamanager_cache_assignments");
+      return cached ? JSON.parse(cached) : [];
+    } catch {
+      return [];
+    }
+  });
+  const [wardRows, setWardRows] = useState(() => {
+    try {
+      const cached = localStorage.getItem("rotamanager_cache_wards");
+      return cached ? JSON.parse(cached) : DEFAULT_WARD_ROWS;
+    } catch {
+      return DEFAULT_WARD_ROWS;
+    }
+  });
   const [tableMissing, setTableMissing] = useState(false);
   const [toast, setToast] = useState("");
   const [showLogoutConfirm, setShowLogoutConfirm] = useState(false);
   const [showChangePassword, setShowChangePassword] = useState(false);
+  const [isOnline, setIsOnline] = useState(typeof navigator !== "undefined" ? navigator.onLine : true);
+  const [showOnlineRestored, setShowOnlineRestored] = useState(false);
 
   function showToast(msg) {
     setToast(msg);
@@ -52,6 +75,9 @@ function MainApp({ user, onLogout }) {
   }
 
   function fetchWards() {
+    if (typeof navigator !== "undefined" && !navigator.onLine) {
+      return;
+    }
     supabase
       .from("wards")
       .select("*")
@@ -69,7 +95,7 @@ function MainApp({ user, onLogout }) {
             setTableMissing(true);
             applyWardRows(DEFAULT_WARD_ROWS);
           } else {
-            console.error("wards fetch error:", error);
+            console.warn("wards fetch issue:", error?.message || error);
           }
           return;
         }
@@ -77,31 +103,65 @@ function MainApp({ user, onLogout }) {
         if (data && data.length > 0) {
           setWardRows(data);
           applyWardRows(data);
+          try { localStorage.setItem("rotamanager_cache_wards", JSON.stringify(data)); } catch {}
         } else {
           applyWardRows(DEFAULT_WARD_ROWS);
         }
       })
-      .catch(console.error);
+      .catch((err) => console.warn("Wards fetch offline/network issue:", err?.message || err));
+  }
+
+  function fetchAllData() {
+    if (typeof navigator !== "undefined" && !navigator.onLine) {
+      return;
+    }
+    supabase.from("members").select("*").then(({ data, error }) => {
+      if (!error && data) {
+        setMembers(data);
+        try { localStorage.setItem("rotamanager_cache_members", JSON.stringify(data)); } catch {}
+      }
+    }).catch((err) => console.warn("Members fetch offline/network issue:", err?.message || err));
+
+    supabase.from("assignments").select("*").then(({ data, error }) => {
+      if (!error && data) {
+        setAssignments(data);
+        try { localStorage.setItem("rotamanager_cache_assignments", JSON.stringify(data)); } catch {}
+      }
+    }).catch((err) => console.warn("Assignments fetch offline/network issue:", err?.message || err));
+
+    fetchWards();
   }
 
   useEffect(() => {
-    // Initial fetch
-    supabase.from("members").select("*").then(({ data }) => data && setMembers(data)).catch(console.error);
-    supabase.from("assignments").select("*").then(({ data }) => data && setAssignments(data)).catch(console.error);
-    fetchWards();
+    const handleOffline = () => setIsOnline(false);
+    const handleOnline = () => {
+      setIsOnline(true);
+      setShowOnlineRestored(true);
+      setTimeout(() => setShowOnlineRestored(false), 3000);
+      fetchAllData();
+    };
+    window.addEventListener("offline", handleOffline);
+    window.addEventListener("online", handleOnline);
+
+    // Initial fetch if online
+    fetchAllData();
 
     // Setup realtime subscriptions
     const memberSub = supabase
       .channel("members-changes")
       .on("postgres_changes", { event: "*", schema: "public", table: "members" }, () => {
-        supabase.from("members").select("*").then(({ data }) => data && setMembers(data));
+        if (typeof navigator === "undefined" || navigator.onLine) {
+          supabase.from("members").select("*").then(({ data }) => data && setMembers(data)).catch(() => {});
+        }
       })
       .subscribe();
 
     const assignmentSub = supabase
       .channel("assignments-changes")
       .on("postgres_changes", { event: "*", schema: "public", table: "assignments" }, () => {
-        supabase.from("assignments").select("*").then(({ data }) => data && setAssignments(data));
+        if (typeof navigator === "undefined" || navigator.onLine) {
+          supabase.from("assignments").select("*").then(({ data }) => data && setAssignments(data)).catch(() => {});
+        }
       })
       .subscribe();
 
@@ -113,6 +173,8 @@ function MainApp({ user, onLogout }) {
       .subscribe();
 
     return () => {
+      window.removeEventListener("offline", handleOffline);
+      window.removeEventListener("online", handleOnline);
       supabase.removeChannel(memberSub);
       supabase.removeChannel(assignmentSub);
       supabase.removeChannel(wardSub);
@@ -245,6 +307,18 @@ function MainApp({ user, onLogout }) {
       onChangePassword={() => setShowChangePassword(true)}
       onLogout={() => setShowLogoutConfirm(true)}
     >
+      {!isOnline && (
+        <div className="offline-banner" style={{ marginBottom: 20, borderRadius: 12 }}>
+          <span>📡</span>
+          <span>You are currently offline. Viewing cached hospital rotation data. Changes will synchronize when reconnected.</span>
+        </div>
+      )}
+      {showOnlineRestored && (
+        <div className="offline-banner online-restored" style={{ marginBottom: 20, borderRadius: 12 }}>
+          <span>✅</span>
+          <span>Connection restored! All hospital rotation data synchronized.</span>
+        </div>
+      )}
       {tab === "dashboard" && (
         <DashboardTab
           members={members}

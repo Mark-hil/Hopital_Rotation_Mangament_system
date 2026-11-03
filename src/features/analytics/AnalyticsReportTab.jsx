@@ -13,27 +13,53 @@ export function AnalyticsReportTab({ members, assignments, wardRows, onNavigateT
   const wards = useMemo(() => wardRows || DEFAULT_WARD_ROWS, [wardRows]);
   const departments = useMemo(() => [...new Set(wards.map((w) => w.department))], [wards]);
 
-  // Supervisors sync
-  const [incharges, setIncharges] = useState([]);
+  // Supervisors sync with offline caching
+  const [incharges, setIncharges] = useState(() => {
+    try {
+      const cached = localStorage.getItem("rotamanager_cache_incharges");
+      return cached ? JSON.parse(cached) : [];
+    } catch {
+      return [];
+    }
+  });
+
   useEffect(() => {
-    supabase
-      .from("incharges")
-      .select("id, name, email, phone, wards")
-      .then(({ data }) => {
-        if (data) setIncharges(data);
-      });
+    const loadIncharges = () => {
+      if (typeof navigator !== "undefined" && !navigator.onLine) {
+        return;
+      }
+      supabase
+        .from("incharges")
+        .select("id, name, email, phone, wards")
+        .then(({ data, error }) => {
+          if (!error && data) {
+            setIncharges(data);
+            try {
+              localStorage.setItem("rotamanager_cache_incharges", JSON.stringify(data));
+            } catch {}
+          }
+        })
+        .catch((err) => {
+          console.warn("Offline or network issue fetching incharges in analytics:", err?.message || err);
+        });
+    };
+
+    loadIncharges();
+
+    const handleOnline = () => {
+      loadIncharges();
+    };
+    window.addEventListener("online", handleOnline);
+
     const ch = supabase
       .channel("analytics_incharges_sync")
       .on("postgres_changes", { event: "*", schema: "public", table: "incharges" }, () => {
-        supabase
-          .from("incharges")
-          .select("id, name, email, phone, wards")
-          .then(({ data }) => {
-            if (data) setIncharges(data);
-          });
+        loadIncharges();
       })
       .subscribe();
+
     return () => {
+      window.removeEventListener("online", handleOnline);
       supabase.removeChannel(ch);
     };
   }, []);

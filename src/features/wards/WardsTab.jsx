@@ -55,15 +55,34 @@ export default function WardsTab({ members, assignments, wardRows, tableMissing,
   const [detailName, setDetailName] = useState(null);
 
   async function fetchIncharges() {
-    const { data } = await supabase.from("incharges").select("id, name, email, phone, wards");
-    if (data) setIncharges(data);
+    if (typeof navigator !== "undefined" && !navigator.onLine) {
+      try {
+        const cached = localStorage.getItem("rotamanager_cache_incharges");
+        if (cached) setIncharges(JSON.parse(cached));
+      } catch {}
+      return;
+    }
+    try {
+      const { data, error } = await supabase.from("incharges").select("id, name, email, phone, wards");
+      if (!error && data) {
+        setIncharges(data);
+        try { localStorage.setItem("rotamanager_cache_incharges", JSON.stringify(data)); } catch {}
+      }
+    } catch (e) {
+      console.warn("Offline or network issue fetching incharges in WardsTab:", e);
+    }
   }
   useEffect(() => {
     fetchIncharges();
+    const handleOnline = () => fetchIncharges();
+    window.addEventListener("online", handleOnline);
     const ch = supabase.channel("incharges_wards_sync")
       .on("postgres_changes", { event: "*", schema: "public", table: "incharges" }, () => fetchIncharges())
       .subscribe();
-    return () => { supabase.removeChannel(ch); };
+    return () => {
+      window.removeEventListener("online", handleOnline);
+      supabase.removeChannel(ch);
+    };
   }, []);
 
   const departments = useMemo(() => [...new Set(rows.map(r => r.department))], [rows]);

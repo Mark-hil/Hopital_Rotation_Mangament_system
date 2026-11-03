@@ -112,7 +112,7 @@ export function WardCapacityBarChart({ wards, wardStats, onSelectWard }) {
               onClick={() => onSelectWard && onSelectWard(w)}
               style={{ cursor: onSelectWard ? "pointer" : "default" }}
             >
-              <div style={{ width: 145, flexShrink: 0, minWidth: 0 }}>
+              <div className="chart-bar-ward-col">
                 <div
                   style={{
                     fontSize: 12.5,
