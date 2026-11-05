@@ -28,10 +28,10 @@ export function CohortCompletionTierChart({ members, assignments }) {
     return {
       avg,
       list: [
-        { label: "Completed (100%)", count: completed, color: "#10B981", bg: "#ECFDF5", icon: "🏆" },
-        { label: "Advanced (75%–99%)", count: advanced, color: "#6366F1", bg: "#EEF2FF", icon: "🚀" },
-        { label: "Mid-way (25%–74%)", count: midway, color: "#F59E0B", bg: "#FFFBEB", icon: "📈" },
-        { label: "Early Stage (<25%)", count: early, color: "#94A3B8", bg: "#F8FAFC", icon: "🌱" },
+        { label: "Completed (100%)", count: completed, color: "#10B981", bg: "#ECFDF5", dot: "#10B981" },
+        { label: "Advanced (75%–99%)", count: advanced, color: "#6366F1", bg: "#EEF2FF", dot: "#6366F1" },
+        { label: "Mid-way (25%–74%)", count: midway, color: "#F59E0B", bg: "#FFFBEB", dot: "#F59E0B" },
+        { label: "Early Stage (<25%)", count: early, color: "#64748B", bg: "#F8FAFC", dot: "#94A3B8" },
       ].map((t) => ({
         ...t,
         pct: Math.round((t.count / totalCount) * 100),
@@ -47,12 +47,13 @@ export function CohortCompletionTierChart({ members, assignments }) {
           justifyContent: "space-between",
           alignItems: "flex-start",
           marginBottom: 16,
+          gap: 12,
         }}
       >
         <div>
           <h4
             style={{
-              fontSize: 16,
+              fontSize: 15.5,
               fontWeight: 800,
               color: "#0F172A",
               margin: 0,
@@ -65,15 +66,24 @@ export function CohortCompletionTierChart({ members, assignments }) {
             Trainee distribution across 52-week clinical competency stages
           </p>
         </div>
-        <div style={{ textAlign: "right" }}>
-          <div style={{ fontSize: 24, fontWeight: 800, color: "#4338CA", lineHeight: 1 }}>
+        <div
+          style={{
+            textAlign: "right",
+            background: "#EEF2FF",
+            border: "1px solid #C7D2FE",
+            padding: "6px 10px",
+            borderRadius: 10,
+            flexShrink: 0,
+          }}
+        >
+          <div style={{ fontSize: 18, fontWeight: 800, color: "#4338CA", lineHeight: 1 }}>
             {tiers.avg}%
           </div>
           <div
             style={{
-              fontSize: 10,
+              fontSize: 9.5,
               fontWeight: 700,
-              color: "#64748B",
+              color: "#6366F1",
               textTransform: "uppercase",
               marginTop: 2,
             }}
@@ -83,15 +93,15 @@ export function CohortCompletionTierChart({ members, assignments }) {
         </div>
       </div>
 
-      <div style={{ display: "flex", flexDirection: "column", gap: 10, flex: 1 }}>
+      <div style={{ display: "flex", flexDirection: "column", gap: 9, flex: 1 }}>
         {tiers.list.map((t) => (
           <div
             key={t.label}
             style={{
               background: t.bg,
-              border: `1px solid ${t.color}33`,
-              borderRadius: 12,
-              padding: "11px 14px",
+              border: `1px solid ${t.color}28`,
+              borderRadius: 11,
+              padding: "10px 13px",
             }}
           >
             <div
@@ -99,22 +109,34 @@ export function CohortCompletionTierChart({ members, assignments }) {
                 display: "flex",
                 justifyContent: "space-between",
                 alignItems: "center",
+                gap: 8,
+                flexWrap: "wrap",
                 marginBottom: 6,
               }}
             >
               <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
-                <span style={{ fontSize: 15 }}>{t.icon}</span>
-                <span style={{ fontSize: 13, fontWeight: 700, color: "#0F172A" }}>{t.label}</span>
+                <span
+                  style={{
+                    width: 8,
+                    height: 8,
+                    borderRadius: "50%",
+                    background: t.dot,
+                    flexShrink: 0,
+                  }}
+                />
+                <span style={{ fontSize: 12.5, fontWeight: 700, color: "#0F172A" }}>{t.label}</span>
               </div>
-              <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
-                <span style={{ fontSize: 13, fontWeight: 800, color: t.color }}>{t.count} trainees</span>
+              <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
+                <span style={{ fontSize: 12.5, fontWeight: 800, color: t.color }}>
+                  {t.count} {t.count === 1 ? "trainee" : "trainees"}
+                </span>
                 <span style={{ fontSize: 11, fontWeight: 600, color: "#64748B" }}>({t.pct}%)</span>
               </div>
             </div>
             <div
               style={{
-                height: 6,
-                background: "rgba(0,0,0,0.06)",
+                height: 5.5,
+                background: "rgba(15, 23, 42, 0.06)",
                 borderRadius: 99,
                 overflow: "hidden",
               }}

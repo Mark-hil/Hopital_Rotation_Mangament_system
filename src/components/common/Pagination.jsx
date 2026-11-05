@@ -21,17 +21,7 @@ export function Pagination({
 
   if (totalItems <= itemsPerPageOptions[0] && totalItems <= itemsPerPage && totalPages <= 1) {
     return (
-      <div
-        style={{
-          display: "flex",
-          justifyContent: "space-between",
-          alignItems: "center",
-          padding: "14px 20px",
-          background: "#F8FAFC",
-          borderTop: "1px solid #E2E8F0",
-          borderRadius: "0 0 16px 16px",
-        }}
-      >
+      <div className="pagination-bar">
         <span style={{ fontSize: 13, color: "#64748B" }}>
           Showing all{" "}
           <span style={{ fontWeight: 700, color: "#0F172A" }}>{totalItems}</span>{" "}
@@ -58,20 +48,8 @@ export function Pagination({
   }
 
   return (
-    <div
-      style={{
-        display: "flex",
-        justifyContent: "space-between",
-        alignItems: "center",
-        flexWrap: "wrap",
-        gap: 12,
-        padding: "14px 20px",
-        background: "#F8FAFC",
-        borderTop: "1px solid #E2E8F0",
-        borderRadius: "0 0 16px 16px",
-      }}
-    >
-      <div style={{ display: "flex", alignItems: "center", gap: 14, flexWrap: "wrap" }}>
+    <div className="pagination-bar">
+      <div className="pagination-info" style={{ display: "flex", alignItems: "center", gap: 14, flexWrap: "wrap" }}>
         <span style={{ fontSize: 13, color: "#64748B" }}>
           Showing{" "}
           <span style={{ fontWeight: 700, color: "#0F172A" }}>{startItem}</span>–
@@ -110,7 +88,7 @@ export function Pagination({
         )}
       </div>
 
-      <div style={{ display: "flex", alignItems: "center", gap: 4 }}>
+      <div className="pagination-controls" style={{ display: "flex", alignItems: "center", gap: 4, flexWrap: "wrap" }}>
         <button
           type="button"
           disabled={currentPage === 1}

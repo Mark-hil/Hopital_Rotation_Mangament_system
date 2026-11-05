@@ -26,8 +26,8 @@ export function DepartmentDistributionDonut({ departments, wards, wardStats }) {
   }, [departments, wards, wardStats]);
 
   // SVG Donut calculations
-  const size = 180;
-  const strokeWidth = 24;
+  const size = 176;
+  const strokeWidth = 22;
   const radius = (size - strokeWidth) / 2;
   const circumference = 2 * Math.PI * radius;
 
@@ -46,7 +46,7 @@ export function DepartmentDistributionDonut({ departments, wards, wardStats }) {
       <div style={{ marginBottom: 16 }}>
         <h4
           style={{
-            fontSize: 16,
+            fontSize: 15.5,
             fontWeight: 800,
             color: "#0F172A",
             margin: 0,
@@ -60,18 +60,9 @@ export function DepartmentDistributionDonut({ departments, wards, wardStats }) {
         </p>
       </div>
 
-      <div
-        style={{
-          display: "flex",
-          alignItems: "center",
-          justifyContent: "space-around",
-          flexWrap: "wrap",
-          gap: 16,
-          flex: 1,
-        }}
-      >
+      <div className="donut-layout">
         {/* SVG Donut */}
-        <div style={{ position: "relative", width: size, height: size }}>
+        <div className="donut-svg-wrap" style={{ position: "relative", width: size, height: size, flexShrink: 0 }}>
           <svg
             width={size}
             height={size}
@@ -143,7 +134,7 @@ export function DepartmentDistributionDonut({ departments, wards, wardStats }) {
         </div>
 
         {/* Legend */}
-        <div style={{ display: "flex", flexDirection: "column", gap: 6, minWidth: 160, flex: 1 }}>
+        <div style={{ display: "flex", flexDirection: "column", gap: 6, minWidth: 170, flex: 1 }}>
           {deptData.items.map((item) => {
             const isHovered = hoveredDept === item.dept;
             return (
@@ -155,14 +146,15 @@ export function DepartmentDistributionDonut({ departments, wards, wardStats }) {
                   display: "flex",
                   alignItems: "center",
                   justifyContent: "space-between",
-                  padding: "4px 8px",
+                  padding: "5px 9px",
                   borderRadius: 8,
-                  background: isHovered ? item.theme.color : "transparent",
+                  background: isHovered ? item.theme.color : "#F8FAFC",
+                  border: `1px solid ${isHovered ? item.theme.accent + "40" : "transparent"}`,
                   cursor: "pointer",
-                  transition: "background 0.15s ease",
+                  transition: "all 0.15s ease",
                 }}
               >
-                <div style={{ display: "flex", alignItems: "center", gap: 7, minWidth: 0 }}>
+                <div style={{ display: "flex", alignItems: "center", gap: 8, minWidth: 0 }}>
                   <span
                     style={{
                       width: 8,
@@ -185,9 +177,20 @@ export function DepartmentDistributionDonut({ departments, wards, wardStats }) {
                     {item.dept}
                   </span>
                 </div>
-                <div style={{ display: "flex", alignItems: "center", gap: 6, flexShrink: 0 }}>
+                <div style={{ display: "flex", alignItems: "center", gap: 8, flexShrink: 0 }}>
                   <span style={{ fontSize: 12, fontWeight: 800, color: "#0F172A" }}>{item.count}</span>
-                  <span style={{ fontSize: 11, color: "#64748B", minWidth: 30, textAlign: "right" }}>
+                  <span
+                    style={{
+                      fontSize: 10.5,
+                      fontWeight: 700,
+                      color: item.theme.textColor,
+                      background: item.theme.color,
+                      padding: "1px 6px",
+                      borderRadius: 99,
+                      minWidth: 36,
+                      textAlign: "center",
+                    }}
+                  >
                     {item.pctInt}%
                   </span>
                 </div>

@@ -3,6 +3,7 @@ import { supabase } from "../../lib/supabase";
 import { DEFAULT_WARD_ROWS, themeForDept } from "../../constants/wardGroups";
 import { TOTAL_WEEKS, assignmentStatus, ACTIVE_STATUSES } from "../../utils/rotationRules";
 import FilterPills from "../../components/common/FilterPills";
+import StatCard from "../dashboard/StatCard";
 import WardCapacityBarChart from "../../components/charts/WardCapacityBarChart";
 import DepartmentDistributionDonut from "../../components/charts/DepartmentDistributionDonut";
 import CohortCompletionTierChart from "../../components/charts/CohortCompletionTierChart";
@@ -122,31 +123,12 @@ export function AnalyticsReportTab({ members, assignments, wardRows, onNavigateT
     : 0;
 
   return (
-    <div>
+    <div className="dashboard-container fadeIn">
       {/* Header & Print Actions */}
-      <div
-        style={{
-          display: "flex",
-          justifyContent: "space-between",
-          alignItems: "flex-start",
-          marginBottom: 26,
-          flexWrap: "wrap",
-          gap: 16,
-        }}
-      >
+      <div className="dashboard-header">
         <div>
-          <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
-            <h2
-              style={{
-                fontSize: 26,
-                fontWeight: 800,
-                letterSpacing: "-0.02em",
-                color: "#0F172A",
-                margin: 0,
-              }}
-            >
-              Clinical Analytics & Reports
-            </h2>
+          <div style={{ display: "flex", alignItems: "center", gap: 10, flexWrap: "wrap" }}>
+            <h2 className="dashboard-title-text">Clinical Analytics & Executive Reports</h2>
             <span
               style={{
                 display: "inline-flex",
@@ -157,14 +139,14 @@ export function AnalyticsReportTab({ members, assignments, wardRows, onNavigateT
                 color: "#4338CA",
                 background: "#EEF2FF",
                 border: "1px solid #C7D2FE",
-                padding: "2px 9px",
+                padding: "3px 10px",
                 borderRadius: 99,
               }}
             >
-              📊 Executive Visualizations
+              Executive Visualizations
             </span>
           </div>
-          <p style={{ fontSize: 14, color: "#64748B", marginTop: 5, maxWidth: 650 }}>
+          <p style={{ fontSize: 13.5, color: "#64748B", marginTop: 6, maxWidth: 650 }}>
             Visual hospital rotation metrics, ward occupancy benchmarks, and clinical competency
             progression reports.
           </p>
@@ -197,7 +179,7 @@ export function AnalyticsReportTab({ members, assignments, wardRows, onNavigateT
             style={{
               display: "inline-flex",
               alignItems: "center",
-              gap: 6,
+              gap: 7,
               padding: "8px 15px",
               background: "#0F172A",
               color: "#fff",
@@ -209,113 +191,82 @@ export function AnalyticsReportTab({ members, assignments, wardRows, onNavigateT
               boxShadow: "0 2px 8px rgba(15,23,42,0.2)",
             }}
           >
-            <span>🖨️</span>
+            <svg width="14" height="14" fill="none" stroke="currentColor" strokeWidth="2.2" viewBox="0 0 24 24">
+              <polyline points="6 9 6 2 18 2 18 9" />
+              <path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2" />
+              <rect x="6" y="14" width="12" height="8" />
+            </svg>
             <span>Print / Export PDF</span>
           </button>
         </div>
       </div>
 
       {/* KPI Cards */}
-      <div className="dashboard-grid" style={{ marginBottom: 24 }}>
-        <div
-          className="premium-card"
-          style={{ padding: "20px", position: "relative", overflow: "hidden", borderRadius: 16 }}
-        >
-          <div style={{ position: "absolute", top: 0, left: 0, bottom: 0, width: 4, background: "#6366F1" }} />
-          <div
-            style={{
-              fontSize: 12,
-              fontWeight: 700,
-              color: "#64748B",
-              textTransform: "uppercase",
-              letterSpacing: "0.05em",
-              marginBottom: 8,
-            }}
-          >
-            Hospital Occupancy
-          </div>
-          <div style={{ fontSize: 32, fontWeight: 800, color: "#3730A3", lineHeight: 1 }}>
-            {occupancyPct}%
-          </div>
-          <div style={{ fontSize: 11, fontWeight: 600, color: "#4F46E5", marginTop: 8 }}>
-            {monitoredPlaced} / {totalCapacity || "—"} monitored bed capacity
-          </div>
-        </div>
+      <div className="dashboard-grid">
+        <StatCard
+          title="Hospital Occupancy"
+          value={`${occupancyPct}%`}
+          badge="Monitored Beds"
+          subtitle={`${monitoredPlaced} / ${totalCapacity || "—"} monitored bed capacity`}
+          accentColor="#6366F1"
+          iconBg="#EEF2FF"
+          textColor="#3730A3"
+          progressPct={occupancyPct}
+          icon={
+            <svg width="20" height="20" fill="none" stroke="currentColor" strokeWidth="2.2" viewBox="0 0 24 24">
+              <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z" />
+              <polyline points="9 22 9 12 15 12 15 22" />
+            </svg>
+          }
+        />
 
-        <div
-          className="premium-card"
-          style={{ padding: "20px", position: "relative", overflow: "hidden", borderRadius: 16 }}
-        >
-          <div style={{ position: "absolute", top: 0, left: 0, bottom: 0, width: 4, background: "#10B981" }} />
-          <div
-            style={{
-              fontSize: 12,
-              fontWeight: 700,
-              color: "#64748B",
-              textTransform: "uppercase",
-              letterSpacing: "0.05em",
-              marginBottom: 8,
-            }}
-          >
-            Active Trainee Load
-          </div>
-          <div style={{ fontSize: 32, fontWeight: 800, color: "#065F46", lineHeight: 1 }}>
-            {totalPlaced}
-          </div>
-          <div style={{ fontSize: 11, fontWeight: 600, color: "#059669", marginTop: 8 }}>
-            Across {wards.filter((w) => (wardStats[w.name]?.current || 0) > 0).length} active hospital wards
-          </div>
-        </div>
+        <StatCard
+          title="Active Trainee Load"
+          value={totalPlaced}
+          badge="Placed in Wards"
+          subtitle={`Across ${wards.filter((w) => (wardStats[w.name]?.current || 0) > 0).length} active hospital wards`}
+          accentColor="#10B981"
+          iconBg="#ECFDF5"
+          textColor="#065F46"
+          progressPct={filteredMembers.length > 0 ? Math.round((totalPlaced / filteredMembers.length) * 100) : 0}
+          icon={
+            <svg width="20" height="20" fill="none" stroke="currentColor" strokeWidth="2.2" viewBox="0 0 24 24">
+              <path d="M22 12h-4l-3 9L9 3l-3 9H2" />
+            </svg>
+          }
+        />
 
-        <div
-          className="premium-card"
-          style={{ padding: "20px", position: "relative", overflow: "hidden", borderRadius: 16 }}
-        >
-          <div style={{ position: "absolute", top: 0, left: 0, bottom: 0, width: 4, background: "#F59E0B" }} />
-          <div
-            style={{
-              fontSize: 12,
-              fontWeight: 700,
-              color: "#64748B",
-              textTransform: "uppercase",
-              letterSpacing: "0.05em",
-              marginBottom: 8,
-            }}
-          >
-            Avg Cohort Progress
-          </div>
-          <div style={{ fontSize: 32, fontWeight: 800, color: "#92400E", lineHeight: 1 }}>
-            {avgCohortProgress}%
-          </div>
-          <div style={{ fontSize: 11, fontWeight: 600, color: "#B45309", marginTop: 8 }}>
-            {totalWeeksDelivered} cumulative training weeks logged
-          </div>
-        </div>
+        <StatCard
+          title="Avg Cohort Progress"
+          value={`${avgCohortProgress}%`}
+          badge="52-Week Curriculum"
+          subtitle={`${totalWeeksDelivered} cumulative training weeks logged`}
+          accentColor="#F59E0B"
+          iconBg="#FFFBEB"
+          textColor="#92400E"
+          progressPct={avgCohortProgress}
+          icon={
+            <svg width="20" height="20" fill="none" stroke="currentColor" strokeWidth="2.2" viewBox="0 0 24 24">
+              <polyline points="22 12 18 12 15 21 9 3 6 12 2 12" />
+            </svg>
+          }
+        />
 
-        <div
-          className="premium-card"
-          style={{ padding: "20px", position: "relative", overflow: "hidden", borderRadius: 16 }}
-        >
-          <div style={{ position: "absolute", top: 0, left: 0, bottom: 0, width: 4, background: "#0EA5E9" }} />
-          <div
-            style={{
-              fontSize: 12,
-              fontWeight: 700,
-              color: "#64748B",
-              textTransform: "uppercase",
-              letterSpacing: "0.05em",
-              marginBottom: 8,
-            }}
-          >
-            Clinical Oversight
-          </div>
-          <div style={{ fontSize: 32, fontWeight: 800, color: "#0369A1", lineHeight: 1 }}>
-            {supervisedPct}%
-          </div>
-          <div style={{ fontSize: 11, fontWeight: 600, color: "#0284C7", marginTop: 8 }}>
-            {supervisedCount} of {wards.length} wards assigned supervisors
-          </div>
-        </div>
+        <StatCard
+          title="Clinical Oversight"
+          value={`${supervisedPct}%`}
+          badge="In-Charge Coverage"
+          subtitle={`${supervisedCount} of ${wards.length} wards assigned supervisors`}
+          accentColor="#0EA5E9"
+          iconBg="#E0F2FE"
+          textColor="#0369A1"
+          progressPct={supervisedPct}
+          icon={
+            <svg width="20" height="20" fill="none" stroke="currentColor" strokeWidth="2.2" viewBox="0 0 24 24">
+              <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" />
+            </svg>
+          }
+        />
       </div>
 
       {/* Visual Chart Grid */}
@@ -335,13 +286,13 @@ export function AnalyticsReportTab({ members, assignments, wardRows, onNavigateT
 
       {/* Executive Ward Allocation Summary Table */}
       <div
+        className="table-wrapper"
         style={{
           marginTop: 12,
           background: "#fff",
           border: "1px solid #E2E8F0",
           borderRadius: 16,
           overflow: "hidden",
-          boxShadow: "0 4px 20px rgba(0,0,0,0.02)",
         }}
       >
         <div
@@ -351,6 +302,8 @@ export function AnalyticsReportTab({ members, assignments, wardRows, onNavigateT
             display: "flex",
             justifyContent: "space-between",
             alignItems: "center",
+            flexWrap: "wrap",
+            gap: 10,
           }}
         >
           <div>
@@ -375,189 +328,255 @@ export function AnalyticsReportTab({ members, assignments, wardRows, onNavigateT
           </span>
         </div>
 
-        <div className="table-scroll-wrapper">
-          <table className="responsive-table">
-            <thead>
-              <tr style={{ background: "#F8FAFC", borderBottom: "1.5px solid #E2E8F0" }}>
-                {[
-                  "Ward",
-                  "Department",
-                  "Supervisors",
-                  "Placed / Cap",
-                  "Occupancy %",
-                  "Discipline Split",
-                  "Status",
-                ].map((h) => (
-                  <th
-                    key={h}
-                    style={{
-                      textAlign: "left",
-                      padding: "12px 18px",
-                      fontSize: 11,
-                      fontWeight: 700,
-                      color: "#64748B",
-                      textTransform: "uppercase",
-                      letterSpacing: "0.05em",
-                    }}
-                  >
-                    {h}
-                  </th>
-                ))}
-              </tr>
-            </thead>
-            <tbody>
-              {wards.map((w, i) => {
-                const st = wardStats[w.name] || { current: 0, nursing: 0, midwifery: 0 };
-                const theme = themeForDept(w.department);
-                const sups = supervisorsFor(w.name);
-                const cap = w.capacity;
-                const over = cap && st.current > cap;
-                const pct = cap ? Math.round((st.current / cap) * 100) : null;
-                return (
-                  <tr
-                    key={w.id || w.name}
-                    className="hover-row"
-                    style={{ background: i % 2 ? "#FAFAFC" : "#fff", borderBottom: "1px solid #F1F5F9" }}
-                  >
-                    <td style={{ padding: "14px 18px", fontWeight: 700, color: "#0F172A", fontSize: 13 }}>
-                      {w.name}
-                    </td>
-                    <td style={{ padding: "14px 18px" }}>
-                      <span
-                        style={{
-                          fontSize: 10.5,
-                          fontWeight: 700,
-                          color: theme.textColor,
-                          background: theme.color,
-                          border: `1px solid ${theme.accent}33`,
-                          padding: "2px 8px",
-                          borderRadius: 99,
-                        }}
-                      >
-                        {w.department}
-                      </span>
-                    </td>
-                    <td style={{ padding: "14px 18px", fontSize: 12 }}>
-                      {sups.length > 0 ? (
-                        <span style={{ fontWeight: 600, color: "#334155" }}>
-                          {sups.map((s) => s.name).join(", ")}
-                        </span>
-                      ) : (
-                        <span style={{ color: "#B45309", fontStyle: "italic", fontSize: 11 }}>
-                          Unsupervised
-                        </span>
-                      )}
-                    </td>
-                    <td
+        {/* Desktop Table */}
+        <div className="desktop-table-view">
+          <div className="table-scroll-wrapper">
+            <table className="responsive-table">
+              <thead>
+                <tr style={{ background: "#F8FAFC", borderBottom: "1.5px solid #E2E8F0" }}>
+                  {[
+                    "Ward",
+                    "Department",
+                    "Supervisors",
+                    "Placed / Cap",
+                    "Occupancy %",
+                    "Discipline Split",
+                    "Status",
+                  ].map((h) => (
+                    <th
+                      key={h}
                       style={{
-                        padding: "14px 18px",
-                        fontSize: 13,
+                        textAlign: "left",
+                        padding: "12px 18px",
+                        fontSize: 11,
                         fontWeight: 700,
-                        color: over ? "#BE123C" : pct >= 80 ? "#B45309" : "#1E293B",
+                        color: "#64748B",
+                        textTransform: "uppercase",
+                        letterSpacing: "0.05em",
                       }}
                     >
-                      {st.current} / {cap || "—"}
-                    </td>
-                    <td style={{ padding: "14px 18px", verticalAlign: "middle" }}>
-                      {cap ? (
-                        <div style={{ display: "flex", alignItems: "center", gap: 8, minWidth: 100 }}>
-                          <div
-                            style={{
-                              flex: 1,
-                              height: 6,
-                              background: "#F1F5F9",
-                              borderRadius: 99,
-                              overflow: "hidden",
-                            }}
-                          >
+                      {h}
+                    </th>
+                  ))}
+                </tr>
+              </thead>
+              <tbody>
+                {wards.map((w, i) => {
+                  const st = wardStats[w.name] || { current: 0, nursing: 0, midwifery: 0 };
+                  const theme = themeForDept(w.department);
+                  const sups = supervisorsFor(w.name);
+                  const cap = w.capacity;
+                  const over = cap && st.current > cap;
+                  const pct = cap ? Math.round((st.current / cap) * 100) : null;
+                  return (
+                    <tr
+                      key={w.id || w.name}
+                      className="hover-row"
+                      style={{ background: i % 2 ? "#FAFAFC" : "#fff", borderBottom: "1px solid #F1F5F9" }}
+                    >
+                      <td style={{ padding: "14px 18px", fontWeight: 700, color: "#0F172A", fontSize: 13 }}>
+                        {w.name}
+                      </td>
+                      <td style={{ padding: "14px 18px" }}>
+                        <span
+                          style={{
+                            fontSize: 10.5,
+                            fontWeight: 700,
+                            color: theme.textColor,
+                            background: theme.color,
+                            border: `1px solid ${theme.accent}33`,
+                            padding: "2px 8px",
+                            borderRadius: 99,
+                          }}
+                        >
+                          {w.department}
+                        </span>
+                      </td>
+                      <td style={{ padding: "14px 18px", fontSize: 12 }}>
+                        {sups.length > 0 ? (
+                          <span style={{ fontWeight: 600, color: "#334155" }}>
+                            {sups.map((s) => s.name).join(", ")}
+                          </span>
+                        ) : (
+                          <span style={{ color: "#B45309", fontStyle: "italic", fontSize: 11 }}>
+                            Unsupervised
+                          </span>
+                        )}
+                      </td>
+                      <td
+                        style={{
+                          padding: "14px 18px",
+                          fontSize: 13,
+                          fontWeight: 700,
+                          color: over ? "#BE123C" : pct >= 80 ? "#B45309" : "#1E293B",
+                        }}
+                      >
+                        {st.current} / {cap || "—"}
+                      </td>
+                      <td style={{ padding: "14px 18px", verticalAlign: "middle" }}>
+                        {cap ? (
+                          <div style={{ display: "flex", alignItems: "center", gap: 8, minWidth: 100 }}>
                             <div
                               style={{
-                                width: `${Math.min(100, pct)}%`,
-                                height: "100%",
-                                background: over ? "#E11D48" : pct >= 80 ? "#F59E0B" : "#10B981",
+                                flex: 1,
+                                height: 6,
+                                background: "#F1F5F9",
+                                borderRadius: 99,
+                                overflow: "hidden",
                               }}
-                            />
+                            >
+                              <div
+                                style={{
+                                  width: `${Math.min(100, pct)}%`,
+                                  height: "100%",
+                                  background: over ? "#E11D48" : pct >= 80 ? "#F59E0B" : "#10B981",
+                                }}
+                              />
+                            </div>
+                            <span
+                              style={{
+                                fontSize: 11,
+                                fontWeight: 700,
+                                color: over ? "#E11D48" : "#475569",
+                              }}
+                            >
+                              {pct}%
+                            </span>
                           </div>
+                        ) : (
+                          <span style={{ color: "#94A3B8", fontSize: 12 }}>—</span>
+                        )}
+                      </td>
+                      <td style={{ padding: "14px 18px", fontSize: 12, color: "#64748B" }}>
+                        {st.nursing} Nurs · {st.midwifery} Midw
+                      </td>
+                      <td style={{ padding: "14px 18px" }}>
+                        {over ? (
                           <span
                             style={{
-                              fontSize: 11,
+                              fontSize: 10,
                               fontWeight: 700,
-                              color: over ? "#E11D48" : "#475569",
+                              color: "#9F1239",
+                              background: "#FFE4E6",
+                              border: "1px solid #FECDD3",
+                              padding: "2px 7px",
+                              borderRadius: 99,
                             }}
                           >
-                            {pct}%
+                            Over Cap
                           </span>
-                        </div>
-                      ) : (
-                        <span style={{ color: "#94A3B8", fontSize: 12 }}>—</span>
-                      )}
-                    </td>
-                    <td style={{ padding: "14px 18px", fontSize: 12, color: "#64748B" }}>
-                      {st.nursing} Nurs · {st.midwifery} Midw
-                    </td>
-                    <td style={{ padding: "14px 18px" }}>
-                      {over ? (
-                        <span
-                          style={{
-                            fontSize: 10,
-                            fontWeight: 700,
-                            color: "#9F1239",
-                            background: "#FFE4E6",
-                            border: "1px solid #FECDD3",
-                            padding: "2px 7px",
-                            borderRadius: 99,
-                          }}
-                        >
-                          Over Cap
-                        </span>
-                      ) : pct !== null && pct >= 80 ? (
-                        <span
-                          style={{
-                            fontSize: 10,
-                            fontWeight: 700,
-                            color: "#92400E",
-                            background: "#FFFBEB",
-                            border: "1px solid #FDE68A",
-                            padding: "2px 7px",
-                            borderRadius: 99,
-                          }}
-                        >
-                          Near Cap
-                        </span>
-                      ) : st.current > 0 ? (
-                        <span
-                          style={{
-                            fontSize: 10,
-                            fontWeight: 700,
-                            color: "#065F46",
-                            background: "#ECFDF5",
-                            border: "1px solid #A7F3D0",
-                            padding: "2px 7px",
-                            borderRadius: 99,
-                          }}
-                        >
-                          Active
-                        </span>
-                      ) : (
-                        <span
-                          style={{
-                            fontSize: 10,
-                            fontWeight: 600,
-                            color: "#64748B",
-                            background: "#F1F5F9",
-                            padding: "2px 7px",
-                            borderRadius: 99,
-                          }}
-                        >
-                          Empty
-                        </span>
-                      )}
-                    </td>
-                  </tr>
-                );
-              })}
-            </tbody>
-          </table>
+                        ) : pct !== null && pct >= 80 ? (
+                          <span
+                            style={{
+                              fontSize: 10,
+                              fontWeight: 700,
+                              color: "#92400E",
+                              background: "#FFFBEB",
+                              border: "1px solid #FDE68A",
+                              padding: "2px 7px",
+                              borderRadius: 99,
+                            }}
+                          >
+                            Near Cap
+                          </span>
+                        ) : st.current > 0 ? (
+                          <span
+                            style={{
+                              fontSize: 10,
+                              fontWeight: 700,
+                              color: "#065F46",
+                              background: "#ECFDF5",
+                              border: "1px solid #A7F3D0",
+                              padding: "2px 7px",
+                              borderRadius: 99,
+                            }}
+                          >
+                            Active
+                          </span>
+                        ) : (
+                          <span
+                            style={{
+                              fontSize: 10,
+                              fontWeight: 600,
+                              color: "#64748B",
+                              background: "#F1F5F9",
+                              padding: "2px 7px",
+                              borderRadius: 99,
+                            }}
+                          >
+                            Empty
+                          </span>
+                        )}
+                      </td>
+                    </tr>
+                  );
+                })}
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+        {/* Mobile Cards View (< 768px) */}
+        <div className="mobile-cards-view">
+          {wards.map((w) => {
+            const st = wardStats[w.name] || { current: 0, nursing: 0, midwifery: 0 };
+            const theme = themeForDept(w.department);
+            const sups = supervisorsFor(w.name);
+            const cap = w.capacity;
+            const over = cap && st.current > cap;
+            const pct = cap ? Math.round((st.current / cap) * 100) : null;
+            return (
+              <div key={w.id || w.name} className="mobile-roster-card">
+                <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", gap: 8 }}>
+                  <div>
+                    <div style={{ fontWeight: 800, fontSize: 14, color: "#0F172A" }}>{w.name}</div>
+                    <span
+                      style={{
+                        display: "inline-block",
+                        marginTop: 3,
+                        fontSize: 10,
+                        fontWeight: 700,
+                        color: theme.textColor,
+                        background: theme.color,
+                        padding: "1px 7px",
+                        borderRadius: 99,
+                      }}
+                    >
+                      {w.department}
+                    </span>
+                  </div>
+                  <div style={{ textAlign: "right" }}>
+                    <div style={{ fontSize: 14, fontWeight: 800, color: over ? "#BE123C" : "#0F172A" }}>
+                      {st.current} / {cap || "—"}
+                    </div>
+                    <div style={{ fontSize: 11, color: "#64748B" }}>
+                      {st.nursing}N · {st.midwifery}M
+                    </div>
+                  </div>
+                </div>
+                {cap && (
+                  <div style={{ height: 5, background: "#F1F5F9", borderRadius: 99, overflow: "hidden" }}>
+                    <div
+                      style={{
+                        width: `${Math.min(100, pct)}%`,
+                        height: "100%",
+                        background: over ? "#E11D48" : pct >= 80 ? "#F59E0B" : "#10B981",
+                      }}
+                    />
+                  </div>
+                )}
+                <div style={{ display: "flex", justifyContent: "space-between", fontSize: 11.5, color: "#64748B" }}>
+                  <span>
+                    Supervisor:{" "}
+                    <strong style={{ color: "#334155" }}>
+                      {sups.length > 0 ? sups.map((s) => s.name).join(", ") : "Unsupervised"}
+                    </strong>
+                  </span>
+                  {pct !== null && <span style={{ fontWeight: 700 }}>{pct}% full</span>}
+                </div>
+              </div>
+            );
+          })}
         </div>
       </div>
     </div>

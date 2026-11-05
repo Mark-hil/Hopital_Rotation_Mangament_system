@@ -34,7 +34,7 @@ export function WardCapacityBarChart({ wards, wardStats, onSelectWard }) {
         style={{
           display: "flex",
           justifyContent: "space-between",
-          alignItems: "center",
+          alignItems: "flex-start",
           marginBottom: 16,
           flexWrap: "wrap",
           gap: 10,
@@ -43,7 +43,7 @@ export function WardCapacityBarChart({ wards, wardStats, onSelectWard }) {
         <div>
           <h4
             style={{
-              fontSize: 16,
+              fontSize: 15.5,
               fontWeight: 800,
               color: "#0F172A",
               margin: 0,
@@ -56,8 +56,8 @@ export function WardCapacityBarChart({ wards, wardStats, onSelectWard }) {
             Live trainee load compared with hospital bed limits
           </p>
         </div>
-        <div style={{ display: "flex", gap: 6, alignItems: "center" }}>
-          <span style={{ fontSize: 11, fontWeight: 700, color: "#94A3B8" }}>SORT:</span>
+        <div style={{ display: "flex", gap: 5, alignItems: "center", flexWrap: "wrap" }}>
+          <span style={{ fontSize: 10.5, fontWeight: 700, color: "#94A3B8", marginRight: 2 }}>SORT:</span>
           {[
             { id: "occupied", label: "Placed" },
             { id: "pct", label: "% Full" },
@@ -68,7 +68,7 @@ export function WardCapacityBarChart({ wards, wardStats, onSelectWard }) {
               type="button"
               onClick={() => setSortMode(s.id)}
               style={{
-                padding: "3px 9px",
+                padding: "4px 9px",
                 fontSize: 11,
                 fontWeight: 700,
                 borderRadius: 6,
@@ -77,6 +77,7 @@ export function WardCapacityBarChart({ wards, wardStats, onSelectWard }) {
                 background: sortMode === s.id ? "#EEF2FF" : "#fff",
                 color: sortMode === s.id ? "#4338CA" : "#64748B",
                 cursor: "pointer",
+                transition: "all 0.15s ease",
               }}
             >
               {s.label}
@@ -89,8 +90,8 @@ export function WardCapacityBarChart({ wards, wardStats, onSelectWard }) {
         style={{
           display: "flex",
           flexDirection: "column",
-          gap: 8,
-          maxHeight: 400,
+          gap: 6,
+          maxHeight: 380,
           overflowY: "auto",
           paddingRight: 4,
         }}
@@ -127,7 +128,7 @@ export function WardCapacityBarChart({ wards, wardStats, onSelectWard }) {
                 </div>
                 <div
                   style={{
-                    fontSize: 10,
+                    fontSize: 10.5,
                     color: theme.textColor,
                     display: "flex",
                     alignItems: "center",
@@ -135,17 +136,20 @@ export function WardCapacityBarChart({ wards, wardStats, onSelectWard }) {
                     marginTop: 1,
                   }}
                 >
-                  <span style={{ width: 6, height: 6, borderRadius: "50%", background: theme.accent }} />
-                  <span>{w.department}</span>
+                  <span style={{ width: 6, height: 6, borderRadius: "50%", background: theme.accent, flexShrink: 0 }} />
+                  <span style={{ overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
+                    {w.department}
+                  </span>
                 </div>
               </div>
 
               {/* Progress Bar Container */}
               <div
+                className="chart-bar-track-col"
                 style={{
                   flex: 1,
                   position: "relative",
-                  height: 18,
+                  height: 16,
                   background: "#F1F5F9",
                   borderRadius: 6,
                   overflow: "hidden",
@@ -189,7 +193,7 @@ export function WardCapacityBarChart({ wards, wardStats, onSelectWard }) {
               </div>
 
               {/* Metrics Right */}
-              <div style={{ width: 95, textAlign: "right", flexShrink: 0, fontSize: 11.5, fontWeight: 700 }}>
+              <div className="chart-bar-metrics-col">
                 <span
                   style={{
                     color: over ? "#BE123C" : pct >= 80 ? "#B45309" : current > 0 ? "#047857" : "#94A3B8",
@@ -233,7 +237,7 @@ export function WardCapacityBarChart({ wards, wardStats, onSelectWard }) {
             <span style={{ width: 8, height: 8, borderRadius: 2, background: "#E11D48" }} /> Over Cap
           </span>
         </div>
-        <span style={{ fontStyle: "italic", fontSize: 10.5 }}>Dashed line = bed capacity</span>
+        <span style={{ fontStyle: "italic", fontSize: 10.5 }}>Marker line = bed capacity</span>
       </div>
     </div>
   );

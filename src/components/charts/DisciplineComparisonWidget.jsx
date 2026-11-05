@@ -1,5 +1,5 @@
 import React, { useMemo } from "react";
-import { getLatestPlacement } from "../../utils/rotationRules";
+import { getLatestPlacement, TOTAL_WEEKS } from "../../utils/rotationRules";
 
 export function DisciplineComparisonWidget({ members, assignments }) {
   const stats = useMemo(() => {
@@ -15,8 +15,10 @@ export function DisciplineComparisonWidget({ members, assignments }) {
         const wards = assignments.filter((a) => a.memberId === m.id);
         totalDone += wards.reduce((s, a) => s + a.weeks, 0);
       });
+      const targetWeeks = TOTAL_WEEKS[grp] || 52;
       const avgWeeks = list.length ? Math.round(totalDone / list.length) : 0;
-      return { total: list.length, active, unassigned, avgWeeks };
+      const avgPct = Math.min(100, Math.round((avgWeeks / targetWeeks) * 100));
+      return { total: list.length, active, unassigned, avgWeeks, targetWeeks, avgPct };
     };
     return {
       nursing: calc("nursing"),
@@ -24,12 +26,35 @@ export function DisciplineComparisonWidget({ members, assignments }) {
     };
   }, [members, assignments]);
 
+  const cohorts = [
+    {
+      key: "nursing",
+      title: "Nursing Cohort",
+      data: stats.nursing,
+      bg: "#EEF2FF",
+      border: "#C7D2FE",
+      titleColor: "#3730A3",
+      badgeColor: "#4338CA",
+      barColor: "#6366F1",
+    },
+    {
+      key: "midwifery",
+      title: "Midwifery Cohort",
+      data: stats.midwifery,
+      bg: "#F0FDF4",
+      border: "#BBF7D0",
+      titleColor: "#166534",
+      badgeColor: "#15803D",
+      barColor: "#10B981",
+    },
+  ];
+
   return (
     <div className="chart-card">
       <div style={{ marginBottom: 16 }}>
         <h4
           style={{
-            fontSize: 16,
+            fontSize: 15.5,
             fontWeight: 800,
             color: "#0F172A",
             margin: 0,
@@ -43,98 +68,86 @@ export function DisciplineComparisonWidget({ members, assignments }) {
         </p>
       </div>
 
-      <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12, flex: 1 }}>
-        <div
-          style={{
-            background: "#EEF2FF",
-            border: "1px solid #C7D2FE",
-            borderRadius: 14,
-            padding: "14px",
-          }}
-        >
+      <div className="discipline-grid">
+        {cohorts.map((c) => (
           <div
+            key={c.key}
             style={{
+              background: c.bg,
+              border: `1px solid ${c.border}`,
+              borderRadius: 14,
+              padding: "15px",
               display: "flex",
+              flexDirection: "column",
               justifyContent: "space-between",
-              alignItems: "center",
-              marginBottom: 10,
             }}
           >
-            <span style={{ fontSize: 13, fontWeight: 800, color: "#3730A3" }}>Nursing</span>
-            <span
-              style={{
-                fontSize: 11,
-                fontWeight: 700,
-                color: "#4338CA",
-                background: "#fff",
-                padding: "2px 8px",
-                borderRadius: 99,
-              }}
-            >
-              {stats.nursing.total} Members
-            </span>
-          </div>
-          <div style={{ display: "flex", flexDirection: "column", gap: 7 }}>
-            <div style={{ display: "flex", justifyContent: "space-between", fontSize: 12 }}>
-              <span style={{ color: "#475569" }}>Active in Wards:</span>
-              <span style={{ fontWeight: 700, color: "#059669" }}>{stats.nursing.active}</span>
-            </div>
-            <div style={{ display: "flex", justifyContent: "space-between", fontSize: 12 }}>
-              <span style={{ color: "#475569" }}>Unassigned:</span>
-              <span style={{ fontWeight: 700, color: "#D97706" }}>{stats.nursing.unassigned}</span>
-            </div>
-            <div style={{ display: "flex", justifyContent: "space-between", fontSize: 12 }}>
-              <span style={{ color: "#475569" }}>Avg Weeks Done:</span>
-              <span style={{ fontWeight: 700, color: "#3730A3" }}>{stats.nursing.avgWeeks} / 52w</span>
-            </div>
-          </div>
-        </div>
+            <div>
+              <div
+                style={{
+                  display: "flex",
+                  justifyContent: "space-between",
+                  alignItems: "center",
+                  gap: 8,
+                  marginBottom: 12,
+                }}
+              >
+                <span style={{ fontSize: 13.5, fontWeight: 800, color: c.titleColor }}>{c.title}</span>
+                <span
+                  style={{
+                    fontSize: 11,
+                    fontWeight: 700,
+                    color: c.badgeColor,
+                    background: "#fff",
+                    padding: "2px 8px",
+                    borderRadius: 99,
+                    boxShadow: "0 1px 2px rgba(0,0,0,0.04)",
+                  }}
+                >
+                  {c.data.total} {c.data.total === 1 ? "Member" : "Members"}
+                </span>
+              </div>
 
-        <div
-          style={{
-            background: "#F0FDF4",
-            border: "1px solid #BBF7D0",
-            borderRadius: 14,
-            padding: "14px",
-          }}
-        >
-          <div
-            style={{
-              display: "flex",
-              justifyContent: "space-between",
-              alignItems: "center",
-              marginBottom: 10,
-            }}
-          >
-            <span style={{ fontSize: 13, fontWeight: 800, color: "#166534" }}>Midwifery</span>
-            <span
-              style={{
-                fontSize: 11,
-                fontWeight: 700,
-                color: "#15803D",
-                background: "#fff",
-                padding: "2px 8px",
-                borderRadius: 99,
-              }}
-            >
-              {stats.midwifery.total} Members
-            </span>
-          </div>
-          <div style={{ display: "flex", flexDirection: "column", gap: 7 }}>
-            <div style={{ display: "flex", justifyContent: "space-between", fontSize: 12 }}>
-              <span style={{ color: "#475569" }}>Active in Wards:</span>
-              <span style={{ fontWeight: 700, color: "#059669" }}>{stats.midwifery.active}</span>
+              <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
+                <div style={{ display: "flex", justifyContent: "space-between", fontSize: 12 }}>
+                  <span style={{ color: "#475569", fontWeight: 500 }}>Active in Wards</span>
+                  <span style={{ fontWeight: 800, color: "#059669" }}>{c.data.active}</span>
+                </div>
+                <div style={{ display: "flex", justifyContent: "space-between", fontSize: 12 }}>
+                  <span style={{ color: "#475569", fontWeight: 500 }}>Unassigned</span>
+                  <span style={{ fontWeight: 800, color: "#D97706" }}>{c.data.unassigned}</span>
+                </div>
+                <div style={{ display: "flex", justifyContent: "space-between", fontSize: 12 }}>
+                  <span style={{ color: "#475569", fontWeight: 500 }}>Avg Weeks Done</span>
+                  <span style={{ fontWeight: 800, color: c.titleColor }}>
+                    {c.data.avgWeeks} / {c.data.targetWeeks}w ({c.data.avgPct}%)
+                  </span>
+                </div>
+              </div>
             </div>
-            <div style={{ display: "flex", justifyContent: "space-between", fontSize: 12 }}>
-              <span style={{ color: "#475569" }}>Unassigned:</span>
-              <span style={{ fontWeight: 700, color: "#D97706" }}>{stats.midwifery.unassigned}</span>
-            </div>
-            <div style={{ display: "flex", justifyContent: "space-between", fontSize: 12 }}>
-              <span style={{ color: "#475569" }}>Avg Weeks Done:</span>
-              <span style={{ fontWeight: 700, color: "#166534" }}>{stats.midwifery.avgWeeks} / 52w</span>
+
+            <div style={{ marginTop: 12 }}>
+              <div
+                style={{
+                  height: 6,
+                  background: "rgba(255, 255, 255, 0.75)",
+                  borderRadius: 99,
+                  overflow: "hidden",
+                }}
+              >
+                <div
+                  style={{
+                    height: "100%",
+                    width: `${c.data.avgPct}%`,
+                    background: c.barColor,
+                    borderRadius: 99,
+                    transition: "width 0.35s ease",
+                  }}
+                />
+              </div>
             </div>
           </div>
-        </div>
+        ))}
       </div>
     </div>
   );
